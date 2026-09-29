@@ -72,8 +72,8 @@ Endpoints: GET/POST /api/v1/assets, GET /api/v1/assets/summary, GET/PATCH/DELETE
 Asset records are valuation records and do not create or modify bank/cash ledger transactions.
 
 ### 3C — Net-Worth History
-Status: Planned
-Potential scope: periodic snapshots of assets, investments and liabilities for historical wealth tracking.
+Status: Complete
+Stores one user-owned snapshot per date for historical wealth tracking. Snapshots include liquid assets, investment value, other assets, lent receivables, credit-card debt, borrowed debt, total assets, total liabilities and net worth. A generation endpoint calculates the snapshot from current ledger and valuation records and is idempotent for a given user/date.
 
 ### 3D — Portfolio Performance
 Status: Planned
