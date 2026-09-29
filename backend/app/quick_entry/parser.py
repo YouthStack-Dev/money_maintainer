@@ -15,10 +15,10 @@ def split_entries(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"[;\n]+", text) if part.strip()]
 
 
-def extract_date(text: str, today: date) -> tuple[date, str]:
+def extract_date(text: str, today: date) -> tuple[date, str, bool]:
     match = _DATE_RE.match(text.strip())
     if not match:
-        return today, text.strip()
+        return today, text.strip(), False
     numeric_day, numeric_month, year, month_name, named_day, remainder = match.groups()
     try:
         if month_name:
@@ -29,9 +29,9 @@ def extract_date(text: str, today: date) -> tuple[date, str]:
             if parsed_year < 100:
                 parsed_year += 2000
             parsed = date(parsed_year, int(numeric_month), int(numeric_day))
-        return parsed, remainder.strip()
+        return parsed, remainder.strip(), True
     except ValueError:
-        return today, text.strip()
+        return today, text.strip(), False
 
 
 def extract_amount(text: str) -> tuple[Decimal | None, str]:
@@ -66,8 +66,10 @@ def clean_description(text: str, transaction_type: TransactionType) -> str:
     return value or transaction_type.value.title()
 
 
-def parse_entry(text: str, today: date) -> dict:
-    transaction_date, body = extract_date(text, today)
+def parse_entry(text: str, today: date, inherited_date: date | None = None) -> dict:
+    transaction_date, body, explicit_date = extract_date(text, today)
+    if not explicit_date and inherited_date is not None:
+        transaction_date = inherited_date
     amount, body = extract_amount(body)
     transaction_type = infer_type(body)
     description = clean_description(body, transaction_type) if transaction_type else body
@@ -77,4 +79,5 @@ def parse_entry(text: str, today: date) -> dict:
         "amount": amount,
         "description": description,
         "transaction_date": datetime.combine(transaction_date, time.min, tzinfo=timezone.utc),
+        "explicit_date": explicit_date,
     }
