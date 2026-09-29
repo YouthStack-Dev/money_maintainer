@@ -20,6 +20,7 @@ from app.investments.router import router as investments_router
 from app.investment_transactions.router import router as investment_transactions_router
 from app.assets.router import router as assets_router
 from app.net_worth.router import router as net_worth_router
+from app.wealth_dashboard.router import router as wealth_dashboard_router
 
 app=FastAPI(title="Money Maintainer API",version="0.1.0",description="Personal finance API with accounts, transactions, budgets and security controls.")
 
@@ -51,6 +52,7 @@ app.include_router(investments_router,prefix="/api/v1/investments",tags=["Invest
 app.include_router(investment_transactions_router,prefix="/api/v1/investment-transactions",tags=["Investment Transactions"])
 app.include_router(assets_router,prefix="/api/v1/assets",tags=["Assets"])
 app.include_router(net_worth_router,prefix="/api/v1/net-worth",tags=["Net Worth"])
+app.include_router(wealth_dashboard_router,prefix="/api/v1/wealth-dashboard",tags=["Wealth Dashboard"])
 
 @app.get("/health")
 def health(): return {"status":"ok"}
