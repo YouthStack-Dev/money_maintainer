@@ -76,8 +76,8 @@ Status: Complete
 Stores one user-owned snapshot per date for historical wealth tracking. Snapshots include liquid assets, investment value, other assets, lent receivables, credit-card debt, borrowed debt, total assets, total liabilities and net worth. A generation endpoint calculates the snapshot from current ledger and valuation records and is idempotent for a given user/date.
 
 ### 3D — Portfolio Performance
-Status: Planned
-Potential scope: investment transactions, realized/unrealized returns, allocation and performance analysis.
+Status: Complete
+Adds BUY/SELL investment transactions with quantity validation, weighted-average cost basis updates, fee-aware realized gains, portfolio performance metrics and allocation by investment type. Investment transactions update portfolio holdings but remain separate from the bank/cash ledger.
 
 ### 3E — Wealth Dashboard
 Status: Planned
