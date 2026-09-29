@@ -111,4 +111,5 @@ Accounts, transactions, recurring transactions, users and admins use deactivatio
 | 0014 | Asset tracking |
 | 0015 | Net-worth snapshots |
 | 0016 | Investment transactions |
+| 0017 | Wealth dashboard permissions |
 Always apply the Alembic migration chain rather than manually creating schema objects.
