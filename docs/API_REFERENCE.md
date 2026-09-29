@@ -195,6 +195,17 @@ Permission prefix: assets.*.
 
 Supported asset types: PROPERTY, VEHICLE, GOLD and OTHER. Asset records do not create or modify bank/cash ledger transactions.
 
+## 3C Net-Worth History — /api/v1/net-worth
+Permission prefix: net_worth.*.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | List historical net-worth snapshots |
+| GET | /current | Calculate the current net-worth position without creating a snapshot |
+| POST | /snapshots/generate | Create or refresh the snapshot for a requested date; defaults to today |
+| GET | /snapshots/{snapshot_id} | Get one historical snapshot |
+
+A snapshot includes liquid assets, investment market value, other assets, lent receivables, credit-card debt, borrowed debt, total assets, total liabilities and net worth. Investment and asset records remain valuation records; snapshot generation does not create ledger transactions.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |
