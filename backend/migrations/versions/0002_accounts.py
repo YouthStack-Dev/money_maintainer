@@ -1,5 +1,6 @@
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 revision = "0002_accounts"
 down_revision = "0001_auth_foundation"
@@ -8,8 +9,8 @@ depends_on = None
 
 
 def upgrade():
-    account_type = sa.Enum(
-        "CASH", "BANK_ACCOUNT", "CREDIT_CARD", "WALLET", name="account_type"
+    account_type = postgresql.ENUM(
+        "CASH", "BANK_ACCOUNT", "CREDIT_CARD", "WALLET", name="account_type", create_type=False
     )
     account_type.create(op.get_bind(), checkfirst=True)
 

@@ -1,5 +1,6 @@
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 revision = "0003_categories"
 down_revision = "0002_accounts"
@@ -8,7 +9,7 @@ depends_on = None
 
 
 def upgrade():
-    category_type = sa.Enum("INCOME", "EXPENSE", name="category_type")
+    category_type = postgresql.ENUM("INCOME", "EXPENSE", name="category_type", create_type=False)
     category_type.create(op.get_bind(), checkfirst=True)
 
     op.create_table(

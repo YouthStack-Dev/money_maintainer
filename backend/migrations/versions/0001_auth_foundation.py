@@ -1,9 +1,10 @@
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 revision="0001_auth_foundation";down_revision=None;branch_labels=None;depends_on=None
 
 def upgrade():
-    role=sa.Enum("USER","ADMIN","SUPER_ADMIN",name="user_role");role.create(op.get_bind(),checkfirst=True)
+    role=postgresql.ENUM("USER","ADMIN","SUPER_ADMIN",name="user_role",create_type=False);role.create(op.get_bind(),checkfirst=True)
     op.create_table("users",
         sa.Column("id",sa.Integer(),primary_key=True),
         sa.Column("email",sa.String(320),nullable=False,unique=True),

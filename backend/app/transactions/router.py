@@ -34,7 +34,7 @@ def _validate_references(
     transaction_type: TransactionType,
 ) -> None:
     account = db.scalar(
-        select(Account).where(Account.id == account_id, Account.user_id == user_id)
+        select(Account).where(Account.id == account_id, Account.user_id == user_id, Account.is_active.is_(True))
     )
     if not account:
         raise HTTPException(status_code=400, detail="Account not found")

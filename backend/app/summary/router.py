@@ -33,7 +33,7 @@ def financial_summary(
     db: Session = Depends(get_db),
 ):
     accounts = db.scalars(
-        select(Account).where(Account.user_id == user.id, Account.is_active.is_(True))
+        select(Account).where(Account.user_id == user.id)
     ).all()
     transactions = _sum_transactions(db, user.id)
 

@@ -3,11 +3,13 @@ from sqlalchemy import engine_from_config,pool
 from app.core.config import settings
 from app.core.database import Base
 from app.users.models import User
-from app.auth.models import SessionToken,OneTimeToken
+from app.auth.models import SessionToken,OneTimeToken,LoginAttempt
 from app.accounts.models import Account
 from app.categories.models import Category
 from app.transactions.models import Transaction
 from app.budgets.models import Budget
+from app.permissions.models import Permission, RolePermission
+from app.audit.models import AuditLog
 
 config=context.config
 config.set_main_option("sqlalchemy.url",settings.database_url)

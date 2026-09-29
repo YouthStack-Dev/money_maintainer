@@ -1,5 +1,6 @@
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 revision = "0004_transactions"
 down_revision = "0003_categories"
@@ -8,8 +9,8 @@ depends_on = None
 
 
 def upgrade():
-    transaction_type = sa.Enum(
-        "INCOME", "EXPENSE", "TRANSFER", "REFUND", name="transaction_type"
+    transaction_type = postgresql.ENUM(
+        "INCOME", "EXPENSE", "TRANSFER", "REFUND", name="transaction_type", create_type=False
     )
     transaction_type.create(op.get_bind(), checkfirst=True)
 

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import admin_user,super_admin
 from app.core.security import hash_password
+from app.core.audit import audit
 from app.users.models import User,Role
 
 router=APIRouter()
@@ -13,11 +14,11 @@ def list_admins(_:User=Depends(admin_user),db:Session=Depends(get_db)):
     return db.scalars(select(User).where(User.role.in_([Role.ADMIN,Role.SUPER_ADMIN])).order_by(User.id)).all()
 
 @router.post("",status_code=201)
-def create_admin(email:str,full_name:str,password:str,_:User=Depends(super_admin),db:Session=Depends(get_db)):
+def create_admin(email:str,full_name:str,password:str,actor:User=Depends(super_admin),db:Session=Depends(get_db)):
     email=email.lower()
     if db.scalar(select(User).where(User.email==email)): raise HTTPException(409,"Email already registered")
     admin=User(email=email,full_name=full_name,password_hash=hash_password(password),role=Role.ADMIN)
-    db.add(admin);db.commit();db.refresh(admin);return admin
+    db.add(admin);db.commit();db.refresh(admin);audit(db,actor.id,"ADMIN_CREATED","User",str(admin.id));db.commit();return admin
 
 @router.get("/{admin_id}")
 def get_admin(admin_id:int,_:User=Depends(admin_user),db:Session=Depends(get_db)):
