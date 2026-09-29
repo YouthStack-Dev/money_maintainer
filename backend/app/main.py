@@ -8,6 +8,7 @@ from app.admins.router import router as admins_router
 from app.accounts.router import router as accounts_router
 from app.categories.router import router as categories_router
 from app.transactions.router import router as transactions_router
+from app.quick_entry.router import router as quick_entry_router
 from app.summary.router import router as summary_router
 from app.budgets.router import router as budgets_router
 from app.recurring_transactions.router import router as recurring_transactions_router
@@ -40,6 +41,7 @@ app.include_router(admins_router,prefix="/api/v1/admins",tags=["Admins"])
 app.include_router(accounts_router,prefix="/api/v1/accounts",tags=["Accounts"])
 app.include_router(categories_router,prefix="/api/v1/categories",tags=["Categories"])
 app.include_router(transactions_router,prefix="/api/v1/transactions",tags=["Transactions"])
+app.include_router(quick_entry_router,prefix="/api/v1/quick-entry",tags=["Quick Entry"])
 app.include_router(summary_router,prefix="/api/v1/summary",tags=["Financial Summary"])
 app.include_router(budgets_router,prefix="/api/v1/budgets",tags=["Budgets"])
 app.include_router(recurring_transactions_router,prefix="/api/v1/recurring-transactions",tags=["Recurring Transactions"])
