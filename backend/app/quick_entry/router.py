@@ -26,7 +26,12 @@ def quick_entry(
     )
     transaction_ids = save_ready_candidates(db, user.id, candidates)
     db.commit()
-    status = QuickEntryStatus.SAVED if transaction_ids else QuickEntryStatus.NEEDS_CONFIRMATION
+    if transaction_ids and any(candidate.confidence != "HIGH" for candidate in candidates):
+        status = QuickEntryStatus.PARTIAL
+    elif transaction_ids:
+        status = QuickEntryStatus.SAVED
+    else:
+        status = QuickEntryStatus.NEEDS_CONFIRMATION
     return QuickEntryResponse(
         status=status,
         candidates=candidates,
