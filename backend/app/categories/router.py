@@ -21,7 +21,11 @@ def _get_category(db: Session, category_id: int, user_id: int) -> Category:
 
 
 def _validate_parent(
-    db: Session, parent_id: int | None, user_id: int, category_id: int | None = None
+    db: Session,
+    parent_id: int | None,
+    user_id: int,
+    category_type,
+    category_id: int | None = None,
 ) -> Category | None:
     if parent_id is None:
         return None
@@ -33,6 +37,28 @@ def _validate_parent(
     )
     if not parent:
         raise HTTPException(status_code=400, detail="Parent category not found")
+    if parent.category_type != category_type:
+        raise HTTPException(
+            status_code=400,
+            detail="Parent category must have the same category type",
+        )
+
+    ancestor_id = parent.parent_id
+    visited = {parent.id}
+    while ancestor_id is not None:
+        if ancestor_id == category_id or ancestor_id in visited:
+            raise HTTPException(status_code=400, detail="Category parent cycle detected")
+        visited.add(ancestor_id)
+        ancestor = db.scalar(
+            select(Category).where(
+                Category.id == ancestor_id,
+                Category.user_id == user_id,
+            )
+        )
+        if ancestor is None:
+            break
+        ancestor_id = ancestor.parent_id
+
     return parent
 
 
@@ -52,7 +78,7 @@ def create_category(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    _validate_parent(db, payload.parent_id, user.id)
+    _validate_parent(db, payload.parent_id, user.id, payload.category_type)
     category = Category(user_id=user.id, **payload.model_dump())
     db.add(category)
     db.commit()
@@ -79,8 +105,19 @@ def update_category(
     category = _get_category(db, category_id, user.id)
     values = payload.model_dump(exclude_unset=True)
 
+    if "category_type" in values:
+        category_type = values["category_type"]
+    else:
+        category_type = category.category_type
+
     if "parent_id" in values:
-        _validate_parent(db, values["parent_id"], user.id, category.id)
+        _validate_parent(
+            db,
+            values["parent_id"],
+            user.id,
+            category_type,
+            category.id,
+        )
 
     for field, value in values.items():
         setattr(category, field, value)
