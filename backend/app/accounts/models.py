@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from enum import Enum
 
 from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Numeric, String
@@ -27,7 +28,7 @@ class Account(Base):
     )
     institution_name: Mapped[str | None] = mapped_column(String(120))
     currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="INR")
-    opening_balance: Mapped[float] = mapped_column(
+    opening_balance: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, server_default="0"
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
