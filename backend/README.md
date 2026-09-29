@@ -2,6 +2,12 @@
 
 FastAPI + PostgreSQL identity foundation.
 
+## Documentation
+- [Project documentation](../docs/README.md)
+- [Phase roadmap](../docs/PHASE_ROADMAP.md)
+- [Complete API reference](../docs/API_REFERENCE.md)
+- [Domain and accounting rules](../docs/DOMAIN_RULES.md)
+
 ## Included
 - Email/password login
 - JWT access tokens
