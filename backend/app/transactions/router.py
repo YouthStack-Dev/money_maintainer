@@ -74,13 +74,6 @@ def _validate_references(
             raise HTTPException(status_code=400, detail="Category not found")
 
 
-def _category_type_matches(transaction_type: TransactionType, category: Category | None) -> bool:
-    if transaction_type in (TransactionType.INCOME, TransactionType.REFUND):
-        return category is None or category.category_type.value in ("INCOME", "EXPENSE")
-    if transaction_type == TransactionType.EXPENSE:
-        return category is None or category.category_type.value == "EXPENSE"
-    return category is None
-
 
 @router.get("", response_model=list[TransactionResponse])
 def list_transactions(
