@@ -30,8 +30,10 @@ def _get_card(db: Session, user_id: int, account_id: int) -> Account:
 
 
 def _next_due_date(today: date, due_day: int) -> date:
-    if today.day <= min(due_day, monthrange(today.year, today.month)[1]):
-        return date(today.year, today.month, min(due_day, monthrange(today.year, today.month)[1]))
+    current_day = min(due_day, monthrange(today.year, today.month)[1])
+    if today.day <= current_day:
+        return date(today.year, today.month, current_day)
+
     year, month = today.year, today.month + 1
     if month == 13:
         year, month = year + 1, 1
@@ -47,12 +49,11 @@ def _current_balance(db: Session, user_id: int, card: Account) -> Decimal:
             (Transaction.account_id == card.id) | (Transaction.transfer_account_id == card.id),
         )
     ).all()
+
     for tx in transactions:
         amount = Decimal(tx.amount)
         if tx.transaction_type in (TransactionType.INCOME, TransactionType.REFUND):
             if tx.account_id == card.id:
-                balance += amount
-            elif tx.transfer_account_id == card.id:
                 balance += amount
         elif tx.transaction_type == TransactionType.EXPENSE:
             if tx.account_id == card.id:
@@ -62,16 +63,20 @@ def _current_balance(db: Session, user_id: int, card: Account) -> Decimal:
                 balance -= amount
             elif tx.transfer_account_id == card.id:
                 balance += amount
+
     return balance
 
 
 def _summary(db: Session, user_id: int, card: Account) -> CreditCardSummary:
+    if not card.is_active:
+        raise HTTPException(409, "Credit card account is inactive")
     if card.credit_limit is None or card.statement_day is None or card.payment_due_day is None:
         raise HTTPException(409, "Credit card settings are not configured")
 
     balance = _current_balance(db, user_id, card)
     outstanding = max(-balance, Decimal("0"))
-    available = max(card.credit_limit - outstanding, Decimal("0"))
+    available = card.credit_limit - outstanding
+    over_limit = max(outstanding - card.credit_limit, Decimal("0"))
     utilization = (outstanding / card.credit_limit * Decimal("100")).quantize(Decimal("0.01"))
 
     return CreditCardSummary(
@@ -82,6 +87,7 @@ def _summary(db: Session, user_id: int, card: Account) -> CreditCardSummary:
         current_balance=balance,
         outstanding_balance=outstanding,
         available_credit=available,
+        over_limit_amount=over_limit,
         utilization_percent=utilization,
         statement_day=card.statement_day,
         payment_due_day=card.payment_due_day,
@@ -94,7 +100,11 @@ def _summary(db: Session, user_id: int, card: Account) -> CreditCardSummary:
 def list_credit_cards(user: User = Depends(current_user), db: Session = Depends(get_db)):
     cards = db.scalars(
         select(Account)
-        .where(Account.user_id == user.id, Account.account_type == AccountType.CREDIT_CARD)
+        .where(
+            Account.user_id == user.id,
+            Account.account_type == AccountType.CREDIT_CARD,
+            Account.is_active.is_(True),
+        )
         .order_by(Account.id)
     ).all()
     return [_summary(db, user.id, card) for card in cards if card.credit_limit is not None]
@@ -113,6 +123,8 @@ def configure_credit_card(
     db: Session = Depends(get_db),
 ):
     card = _get_card(db, user.id, account_id)
+    if not card.is_active:
+        raise HTTPException(409, "Credit card account is inactive")
     card.credit_limit = payload.credit_limit
     card.statement_day = payload.statement_day
     card.payment_due_day = payload.payment_due_day

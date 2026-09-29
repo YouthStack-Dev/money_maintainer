@@ -2,12 +2,33 @@ from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
-from app.accounts.models import Account
-from app.accounts.models import AccountType
+import pytest
+from fastapi import HTTPException
+
+from app.accounts.models import Account, AccountType
 from app.core.database import SessionLocal
 from app.credit_cards.router import _next_due_date, _summary
 from app.transactions.models import Transaction, TransactionType
 from app.users.models import User
+
+
+def _make_card(db, *, balance=Decimal("0"), limit=Decimal("50000"), active=True):
+    user = User(email=f"cc-{uuid4()}@x.test", full_name="Card", password_hash="x")
+    db.add(user)
+    db.flush()
+    card = Account(
+        user_id=user.id,
+        name="Test Card",
+        account_type=AccountType.CREDIT_CARD,
+        opening_balance=balance,
+        credit_limit=limit,
+        statement_day=10,
+        payment_due_day=25,
+        is_active=active,
+    )
+    db.add(card)
+    db.flush()
+    return user, card
 
 
 def test_next_due_date_moves_to_next_month_after_due_day():
@@ -20,20 +41,7 @@ def test_next_due_date_handles_short_months():
 
 def test_credit_card_summary_uses_ledger_balance():
     db = SessionLocal()
-    user = User(email=f"cc-{uuid4()}@x.test", full_name="Card", password_hash="x")
-    db.add(user)
-    db.flush()
-    card = Account(
-        user_id=user.id,
-        name="SBI BPCL",
-        account_type=AccountType.CREDIT_CARD,
-        opening_balance=Decimal("0"),
-        credit_limit=Decimal("50000"),
-        statement_day=10,
-        payment_due_day=25,
-    )
-    db.add(card)
-    db.flush()
+    user, card = _make_card(db)
     db.add(
         Transaction(
             user_id=user.id,
@@ -49,5 +57,39 @@ def test_credit_card_summary_uses_ledger_balance():
     summary = _summary(db, user.id, card)
     assert summary.outstanding_balance == Decimal("12000.00")
     assert summary.available_credit == Decimal("38000.00")
+    assert summary.over_limit_amount == Decimal("0.00")
     assert summary.utilization_percent == Decimal("24.00")
+    db.close()
+
+
+def test_credit_card_summary_reports_over_limit():
+    db = SessionLocal()
+    user, card = _make_card(db, limit=Decimal("50000"))
+    db.add(
+        Transaction(
+            user_id=user.id,
+            account_id=card.id,
+            transaction_type=TransactionType.EXPENSE,
+            amount=Decimal("55000"),
+            transaction_date=date(2026, 9, 1),
+            is_active=True,
+        )
+    )
+    db.commit()
+
+    summary = _summary(db, user.id, card)
+    assert summary.available_credit == Decimal("-5000.00")
+    assert summary.over_limit_amount == Decimal("5000.00")
+    assert summary.utilization_percent == Decimal("110.00")
+    db.close()
+
+
+def test_inactive_card_cannot_be_summarized():
+    db = SessionLocal()
+    user, card = _make_card(db, active=False)
+    db.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        _summary(db, user.id, card)
+    assert exc.value.status_code == 409
     db.close()

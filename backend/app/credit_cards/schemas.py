@@ -18,6 +18,7 @@ class CreditCardSummary(BaseModel):
     current_balance: Decimal
     outstanding_balance: Decimal
     available_credit: Decimal
+    over_limit_amount: Decimal
     utilization_percent: Decimal
     statement_day: int
     payment_due_day: int
