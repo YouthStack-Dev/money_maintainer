@@ -7,6 +7,7 @@ from app.auth.models import SessionToken,OneTimeToken
 from app.accounts.models import Account
 from app.categories.models import Category
 from app.transactions.models import Transaction
+from app.budgets.models import Budget
 
 config=context.config
 config.set_main_option("sqlalchemy.url",settings.database_url)
