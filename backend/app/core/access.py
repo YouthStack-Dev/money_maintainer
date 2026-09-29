@@ -2,7 +2,7 @@ from fastapi import HTTPException,status
 from app.core.security import decode_token
 from app.permissions.service import has_permission
 from app.users.models import User
-RESOURCE_MAP={"users":"users","admins":"admins","accounts":"accounts","categories":"categories","transactions":"transactions","summary":"summary","budgets":"budgets","recurring-transactions":"recurring_transactions","debts":"debts","credit-cards":"credit_cards","goals":"goals","cash-flow":"cash_flow","alerts":"alerts","investments":"investments","investment-transactions":"investment_transactions","assets":"assets","net-worth":"net_worth","wealth-dashboard":"wealth_dashboard"}
+RESOURCE_MAP={"users":"users","admins":"admins","accounts":"accounts","categories":"categories","transactions":"transactions","quick-entry":"transactions","summary":"summary","budgets":"budgets","recurring-transactions":"recurring_transactions","debts":"debts","credit-cards":"credit_cards","goals":"goals","cash-flow":"cash_flow","alerts":"alerts","investments":"investments","investment-transactions":"investment_transactions","assets":"assets","net-worth":"net_worth","wealth-dashboard":"wealth_dashboard"}
 METHOD_ACTION={"GET":"read","POST":"create","PATCH":"update","PUT":"update","DELETE":"delete"}
 
 def authorize_path(db,authorization,path,method):
