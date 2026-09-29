@@ -49,7 +49,7 @@ For each active holding:
 - Market value = quantity × current price
 - Unrealized gain/loss = market value - invested value
 - Unrealized return % = unrealized gain/loss ÷ invested value × 100
-Changing a holding's valuation fields does not create ledger transactions. Investment purchase/sale transaction history and realized gains are reserved for later Phase 3 work.
+Changing a holding's valuation fields does not create ledger transactions. Investment purchase/sale history and realized gains are provided by the Phase 3D investment transaction resource.
 
 ## 14. Assets
 Supported asset types are PROPERTY, VEHICLE, GOLD and OTHER.
