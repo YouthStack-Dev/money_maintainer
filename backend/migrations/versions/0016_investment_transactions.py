@@ -19,6 +19,7 @@ def upgrade():
         sa.Column("quantity", sa.Numeric(20, 8), nullable=False),
         sa.Column("price", sa.Numeric(20, 8), nullable=False),
         sa.Column("fees", sa.Numeric(20, 8), nullable=False, server_default="0"),
+        sa.Column("realized_gain_loss", sa.Numeric(20, 8), nullable=True),
         sa.Column("transaction_date", sa.DateTime(timezone=True), nullable=False),
         sa.Column("notes", sa.String(500)),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
