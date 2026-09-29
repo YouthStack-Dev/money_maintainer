@@ -206,6 +206,19 @@ Permission prefix: net_worth.*.
 
 A snapshot includes liquid assets, investment market value, other assets, lent receivables, credit-card debt, borrowed debt, total assets, total liabilities and net worth. Investment and asset records remain valuation records; snapshot generation does not create ledger transactions.
 
+
+## 3D Portfolio Performance — /api/v1/investment-transactions
+Permission prefix: investment_transactions.*.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | List investment BUY/SELL transactions; optional holding_id filter |
+| POST | / | Record a BUY or SELL and update holding quantity/cost basis |
+| GET | /summary | Aggregate investment transaction count, buy value, sell proceeds and realized gain/loss |
+| GET | /performance | Return invested value, market value, realized/unrealized gain/loss and total return |
+| GET | /allocation | Return current market-value allocation by investment type |
+
+SELL quantity cannot exceed the active holding quantity. BUY transactions update weighted-average cost including fees. SELL transactions persist realized gain/loss using the holding cost basis and fees. These portfolio transactions do not create bank/cash ledger transactions.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |
