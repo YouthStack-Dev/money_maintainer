@@ -87,10 +87,18 @@ Snapshot calculation uses:
 
 Snapshots are valuation history only. They do not create, modify or reverse ledger transactions. The current implementation aggregates stored monetary values without foreign-exchange conversion; multi-currency conversion is reserved for future work.
 
-## 17. Soft deletion and lifecycle
+## 17. Wealth dashboard
+The wealth dashboard is a read-only aggregation layer.
+- Current wealth values are calculated live from accounts, active ledger transactions, active investments, active assets and non-cancelled debts.
+- Investment performance combines persisted realized gains with current unrealized gains.
+- Debt and goal counters are informational signals and do not alter domain status.
+- Historical net-worth trend uses saved 3C snapshots.
+- Dashboard reads never create ledger transactions or valuation records.
+
+## 18. Soft deletion and lifecycle
 Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses. Investment holdings use is_active soft deletion.
 
-## 18. Migrations
+## 19. Migrations
 | Migration | Feature |
 |---|---|
 | 0007 | Recurring transactions |
