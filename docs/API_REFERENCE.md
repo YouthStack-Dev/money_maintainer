@@ -167,6 +167,21 @@ Permission prefix: alerts.*.
 | POST | /refresh | Rebuild stored alert snapshot |
 | PATCH | /{alert_id}/read | Mark alert as read |
 
+# Phase 3 — Wealth Management
+
+## 3A Investments & Holdings — /api/v1/investments
+Permission prefix: investments.*.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | List active investment holdings with derived valuation and unrealized return |
+| POST | / | Create an investment holding |
+| GET | /summary | Aggregate active holding count, invested value, market value, unrealized gain/loss and return |
+| GET | /{holding_id} | Get one investment holding |
+| PATCH | /{holding_id} | Update holding details or valuation |
+| DELETE | /{holding_id} | Deactivate an investment holding |
+
+Investment holdings are valuation records and do not create or modify bank/cash ledger transactions.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |

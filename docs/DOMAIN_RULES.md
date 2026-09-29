@@ -42,10 +42,19 @@ Current rules: credit-card over-limit = CRITICAL; card payment due within 3 days
 CASH_FLOW_LOW exists as an alert type but is not currently generated.
 Refresh deletes existing alerts for the user and creates a fresh current snapshot.
 
-## 13. Soft deletion and lifecycle
-Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses.
+## 13. Investments & holdings
+Investment holdings are separate from the bank/cash ledger. Supported types are STOCK, MUTUAL_FUND, ETF, BOND, CRYPTO and OTHER.
+For each active holding:
+- Invested value = quantity × average cost
+- Market value = quantity × current price
+- Unrealized gain/loss = market value - invested value
+- Unrealized return % = unrealized gain/loss ÷ invested value × 100
+Changing a holding's valuation fields does not create ledger transactions. Investment purchase/sale transaction history and realized gains are reserved for later Phase 3 work.
 
-## 14. Phase 2 migrations
+## 14. Soft deletion and lifecycle
+Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses. Investment holdings use is_active soft deletion.
+
+## 15. Migrations
 | Migration | Feature |
 |---|---|
 | 0007 | Recurring transactions |
@@ -54,4 +63,5 @@ Accounts, transactions, recurring transactions, users and admins use deactivatio
 | 0010 | Financial goals |
 | 0011 | Cash-flow planning |
 | 0012 | Financial alerts |
-Always apply the Alembic migration chain rather than manually creating Phase 2 schema objects.
+| 0013 | Investment holdings |
+Always apply the Alembic migration chain rather than manually creating schema objects.

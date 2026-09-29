@@ -57,8 +57,29 @@ Stored user-visible alerts for credit-card due/over-limit, debt due/overdue and 
 Endpoints: GET /api/v1/alerts, GET /api/v1/alerts/summary, POST /api/v1/alerts/refresh, PATCH /api/v1/alerts/{alert_id}/read.
 
 ## Phase 3 — Wealth Management
+Status: In progress
+
+### 3A — Investments & Holdings
+Status: Complete
+Tracks user-owned investment holdings for stocks, mutual funds, ETFs, bonds, crypto and other instruments. Each holding stores symbol/name, quantity, average cost, current price, currency and notes. The API derives invested value, current market value, unrealized gain/loss and unrealized return percentage.
+Endpoints: GET/POST /api/v1/investments, GET /api/v1/investments/summary, GET/PATCH/DELETE /api/v1/investments/{holding_id}.
+Investment holdings are valuation records and do not create or modify bank/cash ledger transactions.
+
+### 3B — Assets
 Status: Planned
-Potential scope: investments, assets, net-worth history, portfolio tracking, investment performance and financial protection. No Phase 3 endpoint is implemented until added to the repository and documented.
+Potential scope: property, vehicles, gold and other non-market assets.
+
+### 3C — Net-Worth History
+Status: Planned
+Potential scope: periodic snapshots of assets, investments and liabilities for historical wealth tracking.
+
+### 3D — Portfolio Performance
+Status: Planned
+Potential scope: investment transactions, realized/unrealized returns, allocation and performance analysis.
+
+### 3E — Wealth Dashboard
+Status: Planned
+Potential scope: unified financial position across liquid assets, investments, other assets and liabilities.
 
 ## Phase 4 — Intelligence / Automation
 Status: Planned
