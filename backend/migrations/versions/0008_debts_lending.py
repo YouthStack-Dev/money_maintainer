@@ -14,6 +14,7 @@ def upgrade():
         sa.Column("id",sa.Integer(),primary_key=True),
         sa.Column("user_id",sa.Integer(),sa.ForeignKey("users.id",ondelete="CASCADE"),nullable=False,index=True),
         sa.Column("direction",direction,nullable=False,index=True),
+        sa.Column("account_id",sa.Integer(),sa.ForeignKey("accounts.id",ondelete="RESTRICT"),nullable=False,index=True),
         sa.Column("person_name",sa.String(120),nullable=False),
         sa.Column("description",sa.Text()),
         sa.Column("original_amount",sa.Numeric(15,2),nullable=False),

@@ -5,6 +5,7 @@ from app.debts.models import DebtDirection, DebtStatus
 
 class DebtCreate(BaseModel):
     direction: DebtDirection
+    account_id: int
     person_name: str = Field(min_length=1, max_length=120)
     description: str | None = None
     original_amount: Decimal = Field(gt=0, max_digits=15, decimal_places=2)

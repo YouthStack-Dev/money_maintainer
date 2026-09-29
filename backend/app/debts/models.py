@@ -25,6 +25,7 @@ class Debt(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     direction: Mapped[DebtDirection] = mapped_column(SAEnum(DebtDirection, name="debt_direction"), nullable=False, index=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
     person_name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     original_amount: Mapped[Decimal] = mapped_column(Numeric(15,2), nullable=False)
