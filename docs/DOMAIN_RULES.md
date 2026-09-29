@@ -51,10 +51,18 @@ For each active holding:
 - Unrealized return % = unrealized gain/loss ÷ invested value × 100
 Changing a holding's valuation fields does not create ledger transactions. Investment purchase/sale transaction history and realized gains are reserved for later Phase 3 work.
 
-## 14. Soft deletion and lifecycle
+## 14. Assets
+Supported asset types are PROPERTY, VEHICLE, GOLD and OTHER.
+For each active asset:
+- Appreciation/depreciation = current value - purchase value
+- Appreciation/depreciation % = appreciation/depreciation ÷ purchase value × 100
+- A zero purchase value produces 0% percentage
+Assets are valuation records and do not create ledger transactions. Asset purchases, financing and disposal transactions remain in the normal ledger and are not automatically inferred from asset records.
+
+## 15. Soft deletion and lifecycle
 Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses. Investment holdings use is_active soft deletion.
 
-## 15. Migrations
+## 16. Migrations
 | Migration | Feature |
 |---|---|
 | 0007 | Recurring transactions |
@@ -64,4 +72,5 @@ Accounts, transactions, recurring transactions, users and admins use deactivatio
 | 0011 | Cash-flow planning |
 | 0012 | Financial alerts |
 | 0013 | Investment holdings |
+| 0014 | Asset tracking |
 Always apply the Alembic migration chain rather than manually creating schema objects.

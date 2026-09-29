@@ -182,6 +182,19 @@ Permission prefix: investments.*.
 
 Investment holdings are valuation records and do not create or modify bank/cash ledger transactions.
 
+## 3B Assets — /api/v1/assets
+Permission prefix: assets.*.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | List active non-investment assets with derived appreciation/depreciation |
+| POST | / | Create an asset |
+| GET | /summary | Aggregate active asset count, purchase value, current value and appreciation |
+| GET | /{asset_id} | Get one asset |
+| PATCH | /{asset_id} | Update asset details or valuation |
+| DELETE | /{asset_id} | Deactivate an asset |
+
+Supported asset types: PROPERTY, VEHICLE, GOLD and OTHER. Asset records do not create or modify bank/cash ledger transactions.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |

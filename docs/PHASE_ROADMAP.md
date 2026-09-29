@@ -66,8 +66,10 @@ Endpoints: GET/POST /api/v1/investments, GET /api/v1/investments/summary, GET/PA
 Investment holdings are valuation records and do not create or modify bank/cash ledger transactions.
 
 ### 3B — Assets
-Status: Planned
-Potential scope: property, vehicles, gold and other non-market assets.
+Status: Complete
+Tracks non-investment assets such as property, vehicles, gold and other assets with purchase/current valuation, purchase date, notes and lifecycle. The API derives appreciation/depreciation and aggregate asset value.
+Endpoints: GET/POST /api/v1/assets, GET /api/v1/assets/summary, GET/PATCH/DELETE /api/v1/assets/{asset_id}.
+Asset records are valuation records and do not create or modify bank/cash ledger transactions.
 
 ### 3C — Net-Worth History
 Status: Planned
