@@ -1,3 +1,4 @@
+from datetime import datetime, time, timezone
 from decimal import Decimal
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
@@ -6,7 +7,16 @@ from app.debts.models import Debt, DebtDirection, DebtRepayment, DebtStatus
 from app.transactions.models import Transaction, TransactionType
 
 def create_debt(db: Session, user_id: int, values: dict) -> Debt:
-    item = Debt(user_id=user_id, outstanding_amount=values["original_amount"], **values)
+    account = db.scalar(select(Account).where(Account.id == values["account_id"], Account.user_id == user_id, Account.is_active.is_(True)))
+    if not account:
+        raise ValueError("Account not found or inactive")
+    amount = values["original_amount"]
+    transaction_type = TransactionType.INCOME if values["direction"] == DebtDirection.BORROWED else TransactionType.EXPENSE
+    transaction = Transaction(user_id=user_id, account_id=account.id, category_id=None, transfer_account_id=None, transaction_type=transaction_type, amount=amount, description=values.get("description") or f"Debt with {values['person_name']}", transaction_date=datetime.now(timezone.utc))
+    db.add(transaction)
+    db.flush()
+    values = {key: value for key, value in values.items() if key != "account_id"}
+    item = Debt(user_id=user_id, outstanding_amount=amount, **values)
     db.add(item); db.commit(); db.refresh(item); return item
 
 def repay_debt(db: Session, user_id: int, debt_id: int, values: dict) -> tuple[Debt, DebtRepayment, Transaction]:
@@ -21,7 +31,7 @@ def repay_debt(db: Session, user_id: int, debt_id: int, values: dict) -> tuple[D
     tx = Transaction(user_id=user_id, account_id=account.id, category_id=None, transfer_account_id=None,
                      transaction_type=tx_type, amount=amount,
                      description=values.get("note") or f"Debt repayment: {debt.person_name}",
-                     transaction_date=__import__("datetime").datetime.combine(values["repayment_date"], __import__("datetime").datetime.min.time(), tzinfo=__import__("datetime").timezone.utc))
+                     transaction_date=datetime.combine(values["repayment_date"], time.min, tzinfo=timezone.utc))
     db.add(tx); db.flush()
     repayment = DebtRepayment(debt_id=debt.id, account_id=account.id, transaction_id=tx.id,
                               amount=amount, repayment_date=values["repayment_date"], note=values.get("note"))
