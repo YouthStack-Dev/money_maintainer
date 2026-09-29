@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+
 from app.core.access import authorize_path
 from app.core.database import SessionLocal
 from app.core.audit import audit
@@ -14,6 +15,7 @@ from app.summary.router import router as summary_router
 from app.budgets.router import router as budgets_router
 from app.recurring_transactions.router import router as recurring_transactions_router
 from app.debts.router import router as debts_router
+from app.credit_cards.router import router as credit_cards_router
 
 app = FastAPI(title="Money Maintainer API", version="0.1.0", description="Personal finance API with accounts, transactions, budgets and security controls.")
 
@@ -32,6 +34,7 @@ async def permission_and_audit_middleware(request: Request, call_next):
         raise
     finally:
         db.close()
+
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(admins_router, prefix="/api/v1/admins", tags=["Admins"])
@@ -42,6 +45,7 @@ app.include_router(summary_router, prefix="/api/v1/summary", tags=["Financial Su
 app.include_router(budgets_router, prefix="/api/v1/budgets", tags=["Budgets"])
 app.include_router(recurring_transactions_router, prefix="/api/v1/recurring-transactions", tags=["Recurring Transactions"])
 app.include_router(debts_router, prefix="/api/v1/debts", tags=["Debts & Lending"])
+app.include_router(credit_cards_router, prefix="/api/v1/credit-cards", tags=["Credit Cards"])
 
 @app.get("/health")
 def health():

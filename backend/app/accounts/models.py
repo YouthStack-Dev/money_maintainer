@@ -31,6 +31,9 @@ class Account(Base):
     opening_balance: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, server_default="0"
     )
+    credit_limit: Mapped[Decimal | None] = mapped_column(Numeric(15, 2))
+    statement_day: Mapped[int | None] = mapped_column()
+    payment_due_day: Mapped[int | None] = mapped_column()
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

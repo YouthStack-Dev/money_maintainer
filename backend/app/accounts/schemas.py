@@ -31,6 +31,9 @@ class AccountResponse(BaseModel):
     institution_name: str | None
     currency: str
     opening_balance: Decimal
+    credit_limit: Decimal | None
+    statement_day: int | None
+    payment_due_day: int | None
     is_active: bool
     created_at: datetime
     updated_at: datetime
