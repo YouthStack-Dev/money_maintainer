@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.budgets.models import Budget
@@ -88,7 +88,7 @@ def delete_budget(budget_id: int, user: User = Depends(current_user), db: Sessio
 def budget_progress(budget_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     budget = _get_budget(db, budget_id, user.id)
     spent = db.scalar(
-        select(__import__("sqlalchemy").func.coalesce(__import__("sqlalchemy").func.sum(Transaction.amount), 0))
+        select(func.coalesce(func.sum(Transaction.amount), 0))
         .where(
             Transaction.user_id == user.id,
             Transaction.category_id == budget.category_id,
