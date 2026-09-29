@@ -89,4 +89,5 @@ Accounts, transactions, recurring transactions, users and admins use deactivatio
 | 0012 | Financial alerts |
 | 0013 | Investment holdings |
 | 0014 | Asset tracking |
+| 0015 | Net-worth snapshots |
 Always apply the Alembic migration chain rather than manually creating schema objects.
