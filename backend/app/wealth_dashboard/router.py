@@ -15,6 +15,7 @@ from app.goals.models import FinancialGoal, GoalStatus
 from app.investment_transactions.models import InvestmentTransaction
 from app.investments.models import InvestmentHolding
 from app.net_worth.models import NetWorthSnapshot
+from app.net_worth.router import _load_values
 from app.users.models import User
 from app.wealth_dashboard.schemas import (
     WealthDashboardResponse,
@@ -38,6 +39,7 @@ def dashboard(
     plans = db.scalars(select(CashFlowPlan).where(CashFlowPlan.user_id == user.id, CashFlowPlan.is_active.is_(True))).all()
     investment_transactions = db.scalars(select(InvestmentTransaction).where(InvestmentTransaction.user_id == user.id)).all()
 
+    live = _load_values(db, user.id)
     latest = db.scalars(
         select(NetWorthSnapshot)
         .where(NetWorthSnapshot.user_id == user.id)
@@ -45,28 +47,16 @@ def dashboard(
         .limit(1)
     ).first()
 
-    liquid_assets = sum((Decimal(a.opening_balance) for a in accounts if a.account_type.value != "CREDIT_CARD"), Decimal("0"))
-    credit_card_debt = Decimal("0")
-    for account in accounts:
-        if account.account_type.value == "CREDIT_CARD":
-            # The authoritative current card amount is already represented by net-worth snapshots;
-            # live dashboard uses the latest snapshot when available.
-            pass
+    liquid_assets = live["liquid_assets"]
+    credit_card_debt = live["credit_card_debt"]
+    other_assets = live["other_assets"]
+    lent_receivables = live["lent_receivables"]
+    borrowed_debt = live["borrowed_debt"]
+    total_assets = live["total_assets"]
+    total_liabilities = live["total_liabilities"]
+    net_worth = live["net_worth"]
 
-    if latest:
-        liquid_assets = latest.liquid_assets
-        credit_card_debt = latest.credit_card_debt
-        other_assets = latest.other_assets
-        lent_receivables = latest.lent_receivables
-        borrowed_debt = latest.borrowed_debt
-        total_assets = latest.total_assets
-        total_liabilities = latest.total_liabilities
-        net_worth = latest.net_worth
-    else:
-        other_assets = sum((Decimal(a.current_value) for a in assets), Decimal("0"))
-        lent_receivables = sum((Decimal(d.outstanding_amount) for d in debts if d.direction.value == "LENT"), Decimal("0"))
-        borrowed_debt = sum((Decimal(d.outstanding_amount) for d in debts if d.direction.value == "BORROWED"), Decimal("0"))
-        investment_value = sum((h.market_value for h in holdings), Decimal("0"))
+    investment_value = sum((h.market_value for h in holdings), Decimal("0"))
         total_assets = liquid_assets + investment_value + other_assets + lent_receivables
         total_liabilities = credit_card_debt + borrowed_debt
         net_worth = total_assets - total_liabilities
