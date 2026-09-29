@@ -219,6 +219,16 @@ Permission prefix: investment_transactions.*.
 
 SELL quantity cannot exceed the active holding quantity. BUY transactions update weighted-average cost including fees. SELL transactions persist realized gain/loss using the holding cost basis and fees. These portfolio transactions do not create bank/cash ledger transactions.
 
+
+## 3E Wealth Dashboard — /api/v1/wealth-dashboard
+Permission prefix: wealth_dashboard.*.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | Unified live wealth position, investment performance and financial signals |
+| GET | /trend | Historical net-worth trend from saved snapshots; optional limit up to 120 |
+
+The dashboard is read-only and derives its current position from existing domain records. Historical trend data comes from 3C net-worth snapshots. No new financial source of truth or ledger transactions are created.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |
