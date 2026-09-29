@@ -5,6 +5,7 @@ from app.core.database import Base
 from app.users.models import User
 from app.auth.models import SessionToken,OneTimeToken
 from app.accounts.models import Account
+from app.categories.models import Category
 
 config=context.config
 config.set_main_option("sqlalchemy.url",settings.database_url)
