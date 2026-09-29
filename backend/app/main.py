@@ -17,6 +17,7 @@ from app.goals.router import router as goals_router
 from app.cash_flow.router import router as cash_flow_router
 from app.alerts.router import router as alerts_router
 from app.investments.router import router as investments_router
+from app.investment_transactions.router import router as investment_transactions_router
 from app.assets.router import router as assets_router
 from app.net_worth.router import router as net_worth_router
 
@@ -47,6 +48,7 @@ app.include_router(goals_router,prefix="/api/v1/goals",tags=["Financial Goals"])
 app.include_router(cash_flow_router,prefix="/api/v1/cash-flow",tags=["Cash-Flow Planning"])
 app.include_router(alerts_router,prefix="/api/v1/alerts",tags=["Financial Alerts"])
 app.include_router(investments_router,prefix="/api/v1/investments",tags=["Investments"])
+app.include_router(investment_transactions_router,prefix="/api/v1/investment-transactions",tags=["Investment Transactions"])
 app.include_router(assets_router,prefix="/api/v1/assets",tags=["Assets"])
 app.include_router(net_worth_router,prefix="/api/v1/net-worth",tags=["Net Worth"])
 
