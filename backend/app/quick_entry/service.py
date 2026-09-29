@@ -1,18 +1,17 @@
 from datetime import date
 from decimal import Decimal
-import re
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.accounts.models import Account, AccountType
+from app.accounts.models import Account
 from app.categories.models import Category, CategoryType
 from app.quick_entry.parser import parse_entry, split_entries
 from app.quick_entry.schemas import QuickEntryCandidate, QuickEntryConfidence
-from app.transactions.models import TransactionType
+from app.transactions.models import Transaction, TransactionType
 
 CATEGORY_KEYWORDS = {
-    "fuel": ("petrol", "pertol", "diesel", "desile", "fuel", "petrol"),
+    "fuel": ("petrol", "pertol", "diesel", "desile", "fuel"),
     "food": ("food", "tiffin", "tiffan", "breakfast", "lunch", "dinner", "snack", "snacks", "gobi", "juice", "tea", "biryani", "kfc", "domino"),
     "rent": ("rent",),
     "utilities": ("current bill", "electricity", "water bill", "utility", "recharge"),
@@ -35,17 +34,14 @@ def _resolve_account(db: Session, user_id: int, text: str) -> tuple[Account | No
         return explicit[0], True
     if len(explicit) > 1:
         return None, False
-
-    usable = [account for account in accounts]
-    if len(usable) == 1:
-        return usable[0], True
+    if len(accounts) == 1:
+        return accounts[0], True
     return None, False
 
 
 def _resolve_category(db: Session, user_id: int, text: str, transaction_type: TransactionType):
     if transaction_type not in {TransactionType.EXPENSE, TransactionType.INCOME, TransactionType.REFUND}:
         return None
-
     category_type = CategoryType.EXPENSE if transaction_type == TransactionType.EXPENSE else CategoryType.INCOME
     categories = db.scalars(
         select(Category).where(
@@ -58,23 +54,23 @@ def _resolve_category(db: Session, user_id: int, text: str, transaction_type: Tr
     for category in categories:
         if category.name.lower() in lowered:
             return category
-
     for category in categories:
-        key = category.name.lower()
-        keywords = CATEGORY_KEYWORDS.get(key, ())
+        keywords = CATEGORY_KEYWORDS.get(category.name.lower(), ())
         if any(keyword in lowered for keyword in keywords):
             return category
-
     return None
 
 
 def build_candidates(db: Session, user_id: int, text: str, today: date) -> list[QuickEntryCandidate]:
     results = []
+    inherited_date = None
     for raw in split_entries(text):
-        parsed = parse_entry(raw, today)
+        parsed = parse_entry(raw, today, inherited_date)
+        if parsed["explicit_date"]:
+            inherited_date = parsed["transaction_date"].date()
+
         missing = []
         reason = None
-
         if parsed["amount"] is None:
             missing.append("amount")
         if parsed["transaction_type"] is None:
@@ -85,27 +81,32 @@ def build_candidates(db: Session, user_id: int, text: str, today: date) -> list[
         if parsed["transaction_type"] == TransactionType.TRANSFER:
             missing.append("transfer_accounts")
             reason = "Transfers are intentionally handled in a later Quick Entry stage."
-        else:
+        elif parsed["transaction_type"] is not None:
             account, account_ok = _resolve_account(db, user_id, raw)
             if not account_ok:
                 missing.append("account")
                 reason = "Account could not be resolved unambiguously."
 
-        category = _resolve_category(db, user_id, parsed["description"] or "", parsed["transaction_type"]) if parsed["transaction_type"] else None
+        description = parsed["description"] or ""
+        if account_ok and description.strip().lower() in {
+            value.lower() for value in (account.name, account.institution_name) if value
+        }:
+            missing.append("transaction_intent")
+            reason = "Only an account and amount were provided; purchase, payment, transfer, or other intent is ambiguous."
+
+        category = _resolve_category(db, user_id, description, parsed["transaction_type"]) if parsed["transaction_type"] else None
 
         if missing:
-            confidence = QuickEntryConfidence.LOW if "amount" in missing else QuickEntryConfidence.MEDIUM
-        elif account_ok:
-            confidence = QuickEntryConfidence.HIGH
+            confidence = QuickEntryConfidence.LOW if "amount" in missing or "transaction_intent" in missing else QuickEntryConfidence.MEDIUM
         else:
-            confidence = QuickEntryConfidence.MEDIUM
+            confidence = QuickEntryConfidence.HIGH
 
         results.append(
             QuickEntryCandidate(
                 text=raw,
                 transaction_type=parsed["transaction_type"],
                 amount=parsed["amount"],
-                description=parsed["description"],
+                description=description,
                 category_id=category.id if category else None,
                 category_name=category.name if category else None,
                 account_id=account.id if account else None,
@@ -120,8 +121,6 @@ def build_candidates(db: Session, user_id: int, text: str, today: date) -> list[
 
 
 def save_ready_candidates(db: Session, user_id: int, candidates: list[QuickEntryCandidate]) -> list[int]:
-    from app.transactions.models import Transaction
-
     ids = []
     for candidate in candidates:
         if candidate.confidence != QuickEntryConfidence.HIGH:
