@@ -15,6 +15,7 @@ class QuickEntryConfidence(str, Enum):
 
 class QuickEntryStatus(str, Enum):
     SAVED = "SAVED"
+    PARTIAL = "PARTIAL"
     NEEDS_CONFIRMATION = "NEEDS_CONFIRMATION"
 
 
@@ -33,11 +34,11 @@ class QuickEntryCandidate(BaseModel):
     account_name: str | None = None
     transaction_date: datetime | None = None
     confidence: QuickEntryConfidence
-    missing: list[str] = []
+    missing: list[str] = Field(default_factory=list)
     reason: str | None = None
 
 
 class QuickEntryResponse(BaseModel):
     status: QuickEntryStatus
     candidates: list[QuickEntryCandidate]
-    transaction_ids: list[int] = []
+    transaction_ids: list[int] = Field(default_factory=list)
