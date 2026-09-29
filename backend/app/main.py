@@ -12,6 +12,7 @@ from app.categories.router import router as categories_router
 from app.transactions.router import router as transactions_router
 from app.summary.router import router as summary_router
 from app.budgets.router import router as budgets_router
+from app.recurring_transactions.router import router as recurring_transactions_router
 
 app = FastAPI(title="Money Maintainer API", version="0.1.0", description="Personal finance API with accounts, transactions, budgets and security controls.")
 
@@ -38,6 +39,7 @@ app.include_router(categories_router, prefix="/api/v1/categories", tags=["Catego
 app.include_router(transactions_router, prefix="/api/v1/transactions", tags=["Transactions"])
 app.include_router(summary_router, prefix="/api/v1/summary", tags=["Financial Summary"])
 app.include_router(budgets_router, prefix="/api/v1/budgets", tags=["Budgets"])
+app.include_router(recurring_transactions_router, prefix="/api/v1/recurring-transactions", tags=["Recurring Transactions"])
 
 @app.get("/health")
 def health():

@@ -8,6 +8,7 @@ from app.accounts.models import Account
 from app.categories.models import Category
 from app.transactions.models import Transaction
 from app.budgets.models import Budget
+from app.recurring_transactions.models import RecurringTransaction, RecurringTransactionRun
 from app.permissions.models import Permission, RolePermission
 from app.audit.models import AuditLog
 
