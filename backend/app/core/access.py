@@ -1,13 +1,12 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
 from app.core.security import decode_token
 from app.permissions.service import has_permission
 from app.users.models import User
 
-RESOURCE_MAP={"users":"users","admins":"admins","accounts":"accounts","categories":"categories","transactions":"transactions","summary":"summary","budgets":"budgets","recurring-transactions":"recurring_transactions","debts":"debts","credit-cards":"credit_cards"}
+RESOURCE_MAP={"users":"users","admins":"admins","accounts":"accounts","categories":"categories","transactions":"transactions","summary":"summary","budgets":"budgets","recurring-transactions":"recurring_transactions","debts":"debts","credit-cards":"credit_cards","goals":"goals"}
 METHOD_ACTION={"GET":"read","POST":"create","PATCH":"update","PUT":"update","DELETE":"delete"}
 
-def authorize_path(db: Session, authorization: str | None, path: str, method: str) -> int | None:
+def authorize_path(db, authorization: str | None, path: str, method: str) -> int | None:
     if not path.startswith("/api/v1/") or path.startswith("/api/v1/auth") or path=="/api/v1/health": return None
     parts=path.split("/")
     if len(parts)<4 or parts[3] not in RESOURCE_MAP: return None
