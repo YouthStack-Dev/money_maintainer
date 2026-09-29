@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -109,6 +109,71 @@ def create_transaction(
     db.commit()
     db.refresh(tx)
     return _response(tx, holding)
+
+
+@router.get("/performance", response_model=dict)
+def performance(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    holdings = db.scalars(
+        select(InvestmentHolding).where(
+            InvestmentHolding.user_id == user.id,
+            InvestmentHolding.is_active.is_(True),
+        )
+    ).all()
+    transactions = db.scalars(
+        select(InvestmentTransaction).where(InvestmentTransaction.user_id == user.id)
+    ).all()
+    realized = sum(
+        (tx.realized_gain_loss or Decimal("0") for tx in transactions),
+        Decimal("0"),
+    )
+    invested = sum((h.invested_value for h in holdings), Decimal("0"))
+    market = sum((h.market_value for h in holdings), Decimal("0"))
+    unrealized = market - invested
+    total_return = realized + unrealized
+    return {
+        "invested_value": invested,
+        "market_value": market,
+        "realized_gain_loss": realized,
+        "unrealized_gain_loss": unrealized,
+        "total_return": total_return,
+        "return_percent": (
+            (total_return / invested * Decimal("100")).quantize(Decimal("0.01"))
+            if invested else Decimal("0")
+        ),
+    }
+
+
+@router.get("/allocation", response_model=list[dict])
+def allocation(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        select(
+            InvestmentHolding.investment_type,
+            func.sum(InvestmentHolding.market_value)
+        )
+        .where(
+            InvestmentHolding.user_id == user.id,
+            InvestmentHolding.is_active.is_(True),
+        )
+        .group_by(InvestmentHolding.investment_type)
+    ).all()
+    total = sum((Decimal(value or 0) for _, value in rows), Decimal("0"))
+    return [
+        {
+            "investment_type": investment_type,
+            "market_value": Decimal(value or 0),
+            "allocation_percent": (
+                (Decimal(value or 0) / total * Decimal("100")).quantize(Decimal("0.01"))
+                if total else Decimal("0")
+            ),
+        }
+        for investment_type, value in rows
+    ]
 
 
 @router.get("/summary", response_model=dict)
