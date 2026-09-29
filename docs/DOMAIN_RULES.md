@@ -59,7 +59,23 @@ For each active asset:
 - A zero purchase value produces 0% percentage
 Assets are valuation records and do not create ledger transactions. Asset purchases, financing and disposal transactions remain in the normal ledger and are not automatically inferred from asset records.
 
-## 15. Soft deletion and lifecycle
+## 15. Net-worth history
+Net-worth snapshots are daily user-owned valuation records. The unique key is `(user_id, snapshot_date)`, so generating the same date refreshes the existing snapshot instead of creating a duplicate.
+
+Snapshot calculation uses:
+- Liquid assets: all non-credit-card account balances derived from opening balances and active ledger transactions
+- Investment value: active investment market values
+- Other assets: active asset current values
+- Lent receivables: outstanding LENT debts except cancelled records
+- Credit-card debt: positive outstanding amount represented by negative credit-card balances
+- Borrowed debt: outstanding BORROWED debt except cancelled records
+- Total assets = liquid assets + investment value + other assets + lent receivables
+- Total liabilities = credit-card debt + borrowed debt
+- Net worth = total assets - total liabilities
+
+Snapshots are valuation history only. They do not create, modify or reverse ledger transactions. The current implementation aggregates stored monetary values without foreign-exchange conversion; multi-currency conversion is reserved for future work.
+
+## 16. Soft deletion and lifecycle
 Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses. Investment holdings use is_active soft deletion.
 
 ## 16. Migrations
