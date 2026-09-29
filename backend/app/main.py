@@ -17,6 +17,7 @@ from app.goals.router import router as goals_router
 from app.cash_flow.router import router as cash_flow_router
 from app.alerts.router import router as alerts_router
 from app.investments.router import router as investments_router
+from app.assets.router import router as assets_router
 
 app=FastAPI(title="Money Maintainer API",version="0.1.0",description="Personal finance API with accounts, transactions, budgets and security controls.")
 
@@ -45,6 +46,7 @@ app.include_router(goals_router,prefix="/api/v1/goals",tags=["Financial Goals"])
 app.include_router(cash_flow_router,prefix="/api/v1/cash-flow",tags=["Cash-Flow Planning"])
 app.include_router(alerts_router,prefix="/api/v1/alerts",tags=["Financial Alerts"])
 app.include_router(investments_router,prefix="/api/v1/investments",tags=["Investments"])
+app.include_router(assets_router,prefix="/api/v1/assets",tags=["Assets"])
 
 @app.get("/health")
 def health(): return {"status":"ok"}
