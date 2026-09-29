@@ -5,6 +5,7 @@ import pytest
 from app.debts.models import DebtDirection, DebtStatus
 from app.debts.service import create_debt, repay_debt
 from app.accounts.models import Account
+from app.transactions.models import Transaction, TransactionType
 from app.core.database import SessionLocal
 from app.users.models import User
 
@@ -20,6 +21,7 @@ def test_repayment_updates_balance_and_creates_transaction(data,direction,tx_typ
  db,u,a=data; d=create_debt(db,u.id,{"direction":direction,"person_name":"Alex","description":None,"original_amount":Decimal("1000"),"due_date":None})
  d,r,tx=repay_debt(db,u.id,d.id,{"account_id":a.id,"amount":Decimal("400"),"repayment_date":date(2026,9,29),"note":"partial"})
  assert d.outstanding_amount==Decimal("600.00"); assert d.status==DebtStatus.PARTIALLY_PAID; assert tx.transaction_type.value==tx_type
+    assert db.query(Transaction).filter(Transaction.user_id == u.id).count() == 2
  d,r,tx=repay_debt(db,u.id,d.id,{"account_id":a.id,"amount":Decimal("600"),"repayment_date":date(2026,10,1),"note":"final"})
  assert d.outstanding_amount==0; assert d.status==DebtStatus.SETTLED
 
