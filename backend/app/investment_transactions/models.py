@@ -29,6 +29,7 @@ class InvestmentTransaction(Base):
     fees: Mapped[Decimal] = mapped_column(Numeric(20, 8), nullable=False, server_default="0")
     transaction_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     notes: Mapped[str | None] = mapped_column(String(500))
+    realized_gain_loss: Mapped[Decimal | None] = mapped_column(Numeric(20, 8), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
