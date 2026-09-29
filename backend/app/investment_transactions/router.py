@@ -14,9 +14,13 @@ from app.users.models import User
 router = APIRouter()
 
 
-def _realized_gain(tx: InvestmentTransaction, holding: InvestmentHolding) -> Decimal | None:
+def _realized_gain(tx: InvestmentTransaction, holding: InvestmentHolding | None = None) -> Decimal | None:
     if tx.transaction_type != InvestmentTransactionType.SELL:
         return None
+    if tx.realized_gain_loss is not None:
+        return tx.realized_gain_loss
+    if holding is None:
+        return Decimal("0")
     return (tx.quantity * (tx.price - holding.average_cost)) - tx.fees
 
 
@@ -98,7 +102,9 @@ def create_transaction(
         holding.average_cost = (old_cost + new_cost) / new_quantity
         holding.quantity = new_quantity
 
-    tx = InvestmentTransaction(user_id=user.id, **payload.model_dump())
+    tx_data = payload.model_dump()
+    tx_data["realized_gain_loss"] = realized if payload.transaction_type == InvestmentTransactionType.SELL else None
+    tx = InvestmentTransaction(user_id=user.id, **tx_data)
     db.add(tx)
     db.commit()
     db.refresh(tx)
