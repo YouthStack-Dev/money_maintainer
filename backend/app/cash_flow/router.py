@@ -135,7 +135,7 @@ def forecast(plan_id: int, user: User = Depends(current_user), db: Session = Dep
     planned_expenses = db.scalar(select(func.coalesce(func.sum(CashFlowItem.amount), 0)).where(CashFlowItem.plan_id == plan.id, CashFlowItem.is_active.is_(True), CashFlowItem.flow_type == CashFlowType.EXPENSE)) or 0
     start_dt = datetime.combine(plan.start_date, time.min, tzinfo=timezone.utc)
     end_dt = datetime.combine(plan.end_date, time.max, tzinfo=timezone.utc)
-    actual_income = db.scalar(select(func.coalesce(func.sum(Transaction.amount), 0)).where(Transaction.user_id == user.id, Transaction.transaction_type == TransactionType.INCOME, Transaction.is_active.is_(True), Transaction.transaction_date.between(start_dt, end_dt))) or 0
+    actual_income = db.scalar(select(func.coalesce(func.sum(Transaction.amount), 0)).where(Transaction.user_id == user.id, Transaction.transaction_type.in_([TransactionType.INCOME, TransactionType.REFUND]), Transaction.is_active.is_(True), Transaction.transaction_date.between(start_dt, end_dt))) or 0
     actual_expenses = db.scalar(select(func.coalesce(func.sum(Transaction.amount), 0)).where(Transaction.user_id == user.id, Transaction.transaction_type == TransactionType.EXPENSE, Transaction.is_active.is_(True), Transaction.transaction_date.between(start_dt, end_dt))) or 0
     planned_net = Decimal(planned_income) - Decimal(planned_expenses)
     actual_net = Decimal(actual_income) - Decimal(actual_expenses)
