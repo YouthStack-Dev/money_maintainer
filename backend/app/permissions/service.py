@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.permissions.models import Permission, RolePermission
 from app.users.models import User
 
-PERMISSIONS=[f"{resource}.{action}" for resource in ("users","admins","accounts","categories","transactions","summary","budgets","recurring_transactions") for action in ("read","create","update","delete")]
+PERMISSIONS=[f"{resource}.{action}" for resource in ("users","admins","accounts","categories","transactions","summary","budgets","recurring_transactions","debts") for action in ("read","create","update","delete")]
 
 def has_permission(db: Session,user: User,code: str) -> bool:
     if user.role.value == "SUPER_ADMIN": return True
