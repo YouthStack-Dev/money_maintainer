@@ -59,7 +59,19 @@ For each active asset:
 - A zero purchase value produces 0% percentage
 Assets are valuation records and do not create ledger transactions. Asset purchases, financing and disposal transactions remain in the normal ledger and are not automatically inferred from asset records.
 
-## 15. Net-worth history
+## 15. Portfolio performance and investment transactions
+Investment transactions are BUY or SELL records linked to an active investment holding.
+- BUY quantity is added to the holding.
+- BUY average cost becomes the weighted average of existing cost and purchase cost plus fees.
+- SELL quantity is removed from the holding and cannot exceed the current quantity.
+- SELL realized gain/loss = quantity × (sell price - current average cost) - fees.
+- Realized gain/loss is stored on the SELL transaction so later holding changes cannot rewrite historical results.
+- Current unrealized gain/loss remains market value minus current invested value.
+- Total portfolio return = realized gain/loss + unrealized gain/loss.
+- Allocation percentage is based on active holding market value grouped by investment type.
+Investment transactions are portfolio records only and do not automatically create bank/cash ledger transactions.
+
+## 16. Net-worth history
 Net-worth snapshots are daily user-owned valuation records. The unique key is `(user_id, snapshot_date)`, so generating the same date refreshes the existing snapshot instead of creating a duplicate.
 
 Snapshot calculation uses:
@@ -75,10 +87,10 @@ Snapshot calculation uses:
 
 Snapshots are valuation history only. They do not create, modify or reverse ledger transactions. The current implementation aggregates stored monetary values without foreign-exchange conversion; multi-currency conversion is reserved for future work.
 
-## 16. Soft deletion and lifecycle
+## 17. Soft deletion and lifecycle
 Accounts, transactions, recurring transactions, users and admins use deactivation. Debts and goals use domain statuses. Investment holdings use is_active soft deletion.
 
-## 16. Migrations
+## 18. Migrations
 | Migration | Feature |
 |---|---|
 | 0007 | Recurring transactions |
@@ -90,4 +102,5 @@ Accounts, transactions, recurring transactions, users and admins use deactivatio
 | 0013 | Investment holdings |
 | 0014 | Asset tracking |
 | 0015 | Net-worth snapshots |
+| 0016 | Investment transactions |
 Always apply the Alembic migration chain rather than manually creating schema objects.
