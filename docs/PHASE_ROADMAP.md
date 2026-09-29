@@ -80,8 +80,8 @@ Status: Complete
 Adds BUY/SELL investment transactions with quantity validation, weighted-average cost basis updates, fee-aware realized gains, portfolio performance metrics and allocation by investment type. Investment transactions update portfolio holdings but remain separate from the bank/cash ledger.
 
 ### 3E — Wealth Dashboard
-Status: Planned
-Potential scope: unified financial position across liquid assets, investments, other assets and liabilities.
+Status: Complete
+Provides a read-only unified wealth view across live liquid assets, investments, other assets, lent receivables, credit-card debt and borrowed debt, plus investment performance, debt/goal signals and historical net-worth trend.
 
 ## Phase 4 — Intelligence / Automation
 Status: Planned
