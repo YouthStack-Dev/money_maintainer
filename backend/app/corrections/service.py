@@ -9,6 +9,7 @@ from app.categories.models import Category
 from app.transactions.models import Transaction
 from app.office_reimbursements.models import OfficeReimbursement, OfficeReimbursementStatus
 from app.corrections.schemas import CorrectionCandidate, CorrectionAction
+from app.core.audit import audit
 
 _CONTEXT = re.compile(
     r"\b(?:that|this|last|latest|previous|recent)\s+(?:transaction|txn|tx)\b"
@@ -86,6 +87,23 @@ def build_candidate(db: Session, user_id: int, text: str, today, transaction_id=
     return candidate
 
 
+def _audit_correction(db: Session, user_id: int, action: str, target_id: int, before: dict, after: dict, related: dict | None = None) -> None:
+    metadata = {
+        "before": before,
+        "after": after,
+    }
+    if related:
+        metadata["related"] = related
+    audit(
+        db,
+        user_id,
+        action,
+        "Transaction",
+        str(target_id),
+        metadata,
+    )
+
+
 def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate):
     if candidate.action == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE:
         if candidate.reimbursement_id is None:
@@ -134,6 +152,14 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
             if reimbursement_tx is None:
                 raise ValueError("Linked reimbursement transaction not found")
 
+        before = {
+            "reimbursement_amount": str(reimbursement.amount),
+            "reimbursement_description": reimbursement.description,
+            "expense_transaction_amount": str(expense_tx.amount),
+            "expense_transaction_date": expense_tx.transaction_date.isoformat(),
+            "reimbursement_transaction_amount": str(reimbursement_tx.amount) if reimbursement_tx else None,
+            "reimbursement_transaction_date": reimbursement_tx.transaction_date.isoformat() if reimbursement_tx else None,
+        }
         if candidate.amount is not None:
             if candidate.amount <= 0:
                 raise ValueError("Amount must be greater than zero")
@@ -152,6 +178,23 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
             if reimbursement_tx is not None:
                 reimbursement_tx.description = f"Office reimbursement: {candidate.description}"
 
+        after = {
+            "reimbursement_amount": str(reimbursement.amount),
+            "reimbursement_description": reimbursement.description,
+            "expense_transaction_amount": str(expense_tx.amount),
+            "expense_transaction_date": expense_tx.transaction_date.isoformat(),
+            "reimbursement_transaction_amount": str(reimbursement_tx.amount) if reimbursement_tx else None,
+            "reimbursement_transaction_date": reimbursement_tx.transaction_date.isoformat() if reimbursement_tx else None,
+        }
+        _audit_correction(
+            db,
+            user_id,
+            "CORRECTION_OFFICE_REIMBURSEMENT_UPDATE",
+            reimbursement.id,
+            before,
+            after,
+            {"expense_transaction_id": expense_tx.id, "reimbursement_transaction_id": reimbursement_tx.id if reimbursement_tx else None},
+        )
         db.commit()
         db.refresh(reimbursement)
         return expense_tx
@@ -206,7 +249,24 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
         )
         if linked or reimbursement:
             raise ValueError("Relationship-linked transactions cannot be merged safely")
+        before = {
+            "target_active": target.is_active,
+            "duplicate_active": duplicate.is_active,
+        }
         duplicate.is_active = False
+        after = {
+            "target_active": target.is_active,
+            "duplicate_active": duplicate.is_active,
+        }
+        _audit_correction(
+            db,
+            user_id,
+            "CORRECTION_MERGE",
+            target.id,
+            before,
+            after,
+            {"duplicate_transaction_id": duplicate.id},
+        )
         db.commit()
         db.refresh(target)
         return target
@@ -247,6 +307,15 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
         raise ValueError(
             "This transaction is linked to an office reimbursement; use reimbursement correction instead"
         )
+
+    before = {
+        "amount": str(tx.amount),
+        "transaction_date": tx.transaction_date.isoformat(),
+        "description": tx.description,
+        "account_id": tx.account_id,
+        "category_id": tx.category_id,
+        "is_active": tx.is_active,
+    }
 
     if candidate.action == CorrectionAction.DELETE:
         if repayment is not None:
@@ -328,6 +397,23 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
                 )
             tx.category_id = category.id
 
+    after = {
+        "amount": str(tx.amount),
+        "transaction_date": tx.transaction_date.isoformat(),
+        "description": tx.description,
+        "account_id": tx.account_id,
+        "category_id": tx.category_id,
+        "is_active": tx.is_active,
+    }
+    _audit_correction(
+        db,
+        user_id,
+        "CORRECTION_DELETE" if candidate.action == CorrectionAction.DELETE else "CORRECTION_UPDATE",
+        tx.id,
+        before,
+        after,
+        {"debt_repayment_id": repayment.id if repayment else None},
+    )
     db.commit()
     db.refresh(tx)
     return tx
