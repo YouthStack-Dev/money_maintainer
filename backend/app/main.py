@@ -10,6 +10,7 @@ from app.categories.router import router as categories_router
 from app.transactions.router import router as transactions_router
 from app.quick_entry.router import router as quick_entry_router
 from app.financial_relationships.router import router as financial_relationships_router
+from app.office_reimbursements.router import router as office_reimbursements_router
 from app.summary.router import router as summary_router
 from app.budgets.router import router as budgets_router
 from app.recurring_transactions.router import router as recurring_transactions_router
@@ -44,6 +45,7 @@ app.include_router(categories_router,prefix="/api/v1/categories",tags=["Categori
 app.include_router(transactions_router,prefix="/api/v1/transactions",tags=["Transactions"])
 app.include_router(quick_entry_router,prefix="/api/v1/quick-entry",tags=["Quick Entry"])
 app.include_router(financial_relationships_router,prefix="/api/v1/financial-relationships",tags=["Financial Relationships"])
+app.include_router(office_reimbursements_router,prefix="/api/v1/office-reimbursements",tags=["Office Reimbursements"])
 app.include_router(summary_router,prefix="/api/v1/summary",tags=["Financial Summary"])
 app.include_router(budgets_router,prefix="/api/v1/budgets",tags=["Budgets"])
 app.include_router(recurring_transactions_router,prefix="/api/v1/recurring-transactions",tags=["Recurring Transactions"])
