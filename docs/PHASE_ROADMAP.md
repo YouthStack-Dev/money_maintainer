@@ -96,10 +96,14 @@ Relationship-aware entry for lending, borrowing, repayments, credit-card purchas
 Endpoints: POST /api/v1/financial-relationships, GET/POST /api/v1/office-reimbursements, POST /api/v1/office-reimbursements/{reimbursement_id}/reimburse.
 
 #### 3F-C — Correction Engine
-Status: In progress
-First slice: amount/date/description corrections and soft-delete of duplicate transactions, with confirmation and ownership safeguards.
+Status: Complete
+Supports contextual and explicit transaction corrections, amount/date/description/account/category changes, relationship-safe debt repayment corrections, duplicate detection and exact-match merge, office reimbursement correction, confirmation safeguards and correction before/after history.
+
 #### 3F-D — Conversational Finance
-Status: Planned
+Status: Complete
+Read-only natural-language financial queries over the existing ledger and control models. Supports period-aware spending, category spending, money owed to the user, money the user owes, credit-card status, budgets, savings/cash flow, net worth and financial summaries. Query context is returned so clients can support follow-up questions without introducing a second financial data model.
+Endpoint: POST /api/v1/conversational-finance.
+
 #### 3F-E — Personal Finance Home
 Status: Planned
 
