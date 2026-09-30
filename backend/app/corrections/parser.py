@@ -20,6 +20,10 @@ _CATEGORY = re.compile(
     r"\bcategory\s*(?:to|=|is|as)\s+(.+?)(?=$|\s+(?:and|but)\b)",
     re.I,
 )
+_REIMBURSEMENT_ID = re.compile(
+    r"\b(?:office\s+)?reimbursement\s*(?:#|id\s*)?(\d+)\b",
+    re.I,
+)
 
 
 def parse_correction(
@@ -30,34 +34,47 @@ def parse_correction(
 ):
     body = text.strip()
     lower = body.lower()
+
+    reimbursement_match = _REIMBURSEMENT_ID.search(body)
+    office_reimbursement = bool(
+        reimbursement_match and re.search(r"\boffice\s+reimbursement\b", lower)
+    )
     merge_match = re.search(
         r"\bmerge\s+(?:transaction|txn|tx)\s*#?\s*(\d+)\s+(?:into|with)\s+(?:transaction|txn|tx)?\s*#?\s*(\d+)\b",
         lower,
     )
     action = (
-        CorrectionAction.MERGE
-        if merge_match
+        CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE
+        if office_reimbursement
         else (
-            CorrectionAction.DELETE
-            if re.search(r"\b(?:delete|remove|duplicate)\b", lower)
-            else CorrectionAction.UPDATE
+            CorrectionAction.MERGE
+            if merge_match
+            else (
+                CorrectionAction.DELETE
+                if re.search(r"\b(?:delete|remove|duplicate)\b", lower)
+                else CorrectionAction.UPDATE
+            )
         )
     )
 
     found_id = transaction_id
     duplicate_transaction_id = None
-    if merge_match:
+    reimbursement_id = None
+
+    if office_reimbursement:
+        reimbursement_id = int(reimbursement_match.group(1))
+    elif merge_match:
         duplicate_transaction_id = int(merge_match.group(1))
         found_id = int(merge_match.group(2))
-    if found_id is None:
+    if found_id is None and not office_reimbursement:
         match = _ID.search(body)
         if match:
             found_id = int(match.group(1))
-    if found_id is None and _CONTEXT.search(body):
+    if found_id is None and not office_reimbursement and _CONTEXT.search(body):
         found_id = context_transaction_id
 
     amount = None
-    if action == CorrectionAction.UPDATE:
+    if action in {CorrectionAction.UPDATE, CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE}:
         match = re.search(
             r"\b(?:to|amount)\s*(?:₹|rs\.?\s*)?([0-9][0-9,]*(?:\.\d{1,2})?)\b",
             lower,
@@ -95,8 +112,10 @@ def parse_correction(
         category_name = category_match.group(1).strip().strip(".")
 
     missing = []
-    if not found_id:
+    if not found_id and not office_reimbursement:
         missing.append("transaction_id")
+    if office_reimbursement and reimbursement_id is None:
+        missing.append("reimbursement_id")
     if action == CorrectionAction.MERGE and duplicate_transaction_id == found_id:
         missing.append("distinct_transactions")
 
@@ -104,13 +123,15 @@ def parse_correction(
         value is not None
         for value in (amount, tx_date, description, account_name, category_name)
     )
-    if action == CorrectionAction.UPDATE and not has_field:
+    if action in {CorrectionAction.UPDATE, CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE} and not has_field:
         missing.append("correction_fields")
 
     confidence = "HIGH" if not missing else "MEDIUM"
     reason = (
         None
         if confidence == "HIGH"
+        else "Identify the reimbursement and field to change before saving."
+        if action == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE
         else "Identify the transaction and the field to change before saving."
     )
     return {
@@ -118,6 +139,7 @@ def parse_correction(
         "action": action,
         "transaction_id": found_id,
         "duplicate_transaction_id": duplicate_transaction_id,
+        "reimbursement_id": reimbursement_id,
         "amount": amount,
         "transaction_date": tx_date,
         "description": description,
