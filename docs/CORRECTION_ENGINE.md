@@ -76,9 +76,8 @@ A confirmed candidate must still resolve to resources owned by the authenticated
 ## Next 3F-C slices
 
 1. Duplicate detection and safe merge.
-2. Duplicate detection and safe merge.
-3. Office reimbursement correction.
-4. Correction history / before-after audit view.
+2. Office reimbursement correction.
+3. Correction history / before-after audit view.
 
 
 ## Duplicate detection and safe merge
@@ -89,3 +88,27 @@ A confirmed candidate must still resolve to resources owned by the authenticated
 - The two transaction IDs must be different.
 - Debt-repayment-linked and office-reimbursement-linked transactions cannot be merged through the generic correction engine.
 - This slice does not attempt fuzzy duplicate matching or automatic merging based on similar descriptions.
+
+
+## Office reimbursement correction
+
+Office reimbursements are corrected through the reimbursement relationship, not by generic transaction correction.
+
+Examples:
+
+- `change office reimbursement 42 amount to 2500`
+- `correct office reimbursement 42 date to 21/08`
+- `change office reimbursement 42 description to Twilio refund`
+
+Rules:
+
+- The reimbursement ID must resolve to an active reimbursement owned by the authenticated user.
+- CANCELLED reimbursements cannot be corrected.
+- Amount corrections require a positive amount.
+- For PENDING reimbursements, the linked office expense transaction and reimbursement record are updated together.
+- For REIMBURSED reimbursements, the linked office expense transaction, reimbursement transaction, and reimbursement record are updated together.
+- Date corrections keep the linked transaction dates synchronized.
+- Description correction updates the reimbursement description and the generated reimbursement transaction description; the original office expense description is not silently replaced.
+- Account and category changes are not supported through this reimbursement correction intent.
+- Generic transaction correction remains blocked for reimbursement-linked transactions.
+- The expense/reimbursement transaction links and reimbursement status are preserved.
