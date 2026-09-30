@@ -50,8 +50,12 @@ def parse_query(text: str, today: date | None = None) -> dict:
     m = re.search(r"\b(?:on|for)\s+([a-z][a-z &'-]{2,40})\??$", t)
     if intent == "SPENDING" and m:
         category = m.group(1).strip()
+    account_name = None
+    m = re.search(r"\b(?:my|the)\s+([a-z0-9][a-z0-9 &_-]{1,60})\s+(?:card|cc)\b", t)
+    if m:
+        account_name = m.group(1).strip()
     person = None
     if intent in {"MONEY_OWED_TO_ME", "MONEY_I_OWE"}:
         m = re.search(r"\b(?:from|to|by|of)\s+([a-z][a-z .'-]{1,50})", t)
         if m: person = m.group(1).strip()
-    return {"intent":intent,"start":start.isoformat() if start else None,"end":end.isoformat() if end else None,"category":category,"person":person,"text":text}
+    return {"intent":intent,"start":start.isoformat() if start else None,"end":end.isoformat() if end else None,"category":category,"person":person,"account_name":account_name,"text":text}
