@@ -14,6 +14,15 @@ router = APIRouter()
 @router.post("", response_model=RelationshipResponse)
 def relationship_entry(payload: RelationshipRequest, user: User = Depends(current_user), db: Session = Depends(get_db)):
     candidate = build_candidate(db, user.id, payload.text, datetime.now(timezone.utc).date())
+    if payload.confirm:
+        if payload.candidate is None:
+            raise HTTPException(status_code=400, detail="candidate is required when confirm=true")
+        candidate = payload.candidate
+        if candidate.text != payload.text:
+            raise HTTPException(status_code=400, detail="candidate text must match request text")
+        if candidate.missing:
+            raise HTTPException(status_code=400, detail="candidate still has missing fields")
+        candidate.confidence = "HIGH"
     if candidate.confidence != "HIGH":
         return RelationshipResponse(status="NEEDS_CONFIRMATION", candidate=candidate)
     try:
