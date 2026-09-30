@@ -148,6 +148,13 @@ def answer_query(db: Session, user: User, text: str, context=None):
             Account.account_type == AccountType.CREDIT_CARD,
             Account.is_active.is_(True),
         )).all()
+        target = parsed.get("account_name")
+        if target:
+            cards = [
+                card for card in cards
+                if target.lower() in card.name.lower()
+                or target.lower() in (card.institution_name or "").lower()
+            ]
         rows = []
         for card in cards:
             if card.credit_limit is not None and card.statement_day is not None and card.payment_due_day is not None:
