@@ -4,7 +4,7 @@
 
 3F-C lets the user correct an existing financial transaction using natural language without manually navigating a finance form.
 
-The first slices are intentionally conservative: they correct amount, date, or description, or deactivate a duplicate transaction.
+The correction engine remains conservative around financial relationships.
 
 ## Endpoint
 
@@ -12,53 +12,61 @@ POST /api/v1/corrections
 
 ### Explicit transaction
 
-Example: `change transaction 42 amount to 550`
+`change transaction 42 amount to 550`
 
 ### Contextual transaction
 
-The correction engine can resolve a contextual reference to the user's latest active transaction when the text contains a clear contextual phrase:
+`change that transaction amount to 550`
 
-- `change that transaction amount to 550`
-- `correct the last transaction date to 21/08`
-- `update this transaction description to petrol`
+Context resolves to the user's latest active transaction. If no active transaction exists, confirmation is required.
 
-Resolution uses the authenticated user's active transactions ordered by transaction date and ID. It never searches another user's transactions.
+### Account correction
 
-If no active transaction exists, the target remains missing and the API returns `NEEDS_CONFIRMATION`.
+`change transaction 42 account to HDFC`
 
-A request without an explicit ID or contextual reference, such as `change amount to 550`, still requires confirmation.
+The engine resolves the account by exact case-insensitive name among the authenticated user's active accounts. Unknown or inactive accounts require confirmation and are never assigned.
 
-## Delete duplicate
+Account correction is not supported for transfer transactions in this slice because transfers have both source and destination accounts.
 
-`delete duplicate transaction 42`
+### Category correction
 
-Deletion is a soft delete (`is_active=false`) so the original ledger row remains auditable.
+`change transaction 42 category to Fuel`
 
-## Confirmation
+The engine resolves the category by exact case-insensitive name among the authenticated user's active categories. The category type must match the transaction:
 
-A correction with missing target or correction fields returns `NEEDS_CONFIRMATION`.
+- INCOME transaction -> INCOME category
+- EXPENSE transaction -> EXPENSE category
 
-The client can resubmit the same text with `confirm=true` and the completed candidate.
+REFUND and TRANSFER category semantics are intentionally not changed by this slice.
+
+### Confirmation
+
+If the transaction, account, or category cannot be resolved safely, the API returns `NEEDS_CONFIRMATION` rather than guessing.
+
+A confirmed candidate must still resolve to resources owned by the authenticated user.
 
 ## Safety rules
 
 - Corrections are restricted to the authenticated user's transaction.
 - Amount must remain positive.
+- Account/category references must belong to the authenticated user and be active.
+- Transfer account changes are not supported here.
 - Transaction rows are soft-deleted, not physically removed.
 - Corrections use row locking during execution.
-- Relationship-linked corrections are not silently rewritten in this slice because debt, repayment, credit-card and office-reimbursement records can depend on the original financial event.
+- Relationship-linked corrections are not silently rewritten in this slice.
 
 ## Current scope
 
 1. Explicit transaction correction.
 2. Contextual correction using the latest active transaction.
 3. Amount, date, and description correction.
-4. Soft-delete duplicate.
+4. Account correction for non-transfer transactions.
+5. Category correction for INCOME/EXPENSE transactions.
+6. Soft-delete duplicate.
 
 ## Next 3F-C slices
 
-1. Account/category correction with ownership validation.
-2. Financial relationship corrections: lending/repayment and CC settlement without breaking linked records.
-3. Duplicate detection and safe merge.
-4. Office reimbursement correction.
-5. Correction history / before-after audit view.
+1. Financial relationship corrections: lending/repayment and CC settlement without breaking linked records.
+2. Duplicate detection and safe merge.
+3. Office reimbursement correction.
+4. Correction history / before-after audit view.
