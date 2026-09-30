@@ -145,7 +145,6 @@ def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidat
         account = db.scalar(select(Account).where(Account.id == candidate.secondary_account_id, Account.user_id == user_id, Account.is_active.is_(True)))
         if not account:
             raise ValueError("Secondary account is not valid for this user")
-        raise ValueError("Relationship requires confirmation before saving")
     intent = candidate.intent
     amount = Decimal(candidate.amount)
     tx_date = candidate.transaction_date
