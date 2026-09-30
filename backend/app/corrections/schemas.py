@@ -8,12 +8,14 @@ from pydantic import BaseModel, Field
 class CorrectionAction(str, Enum):
     UPDATE = "UPDATE"
     DELETE = "DELETE"
+    MERGE = "MERGE"
 
 
 class CorrectionCandidate(BaseModel):
     text: str
     action: CorrectionAction | None = None
     transaction_id: int | None = None
+    duplicate_transaction_id: int | None = None
     amount: Decimal | None = None
     transaction_date: datetime | None = None
     description: str | None = None
