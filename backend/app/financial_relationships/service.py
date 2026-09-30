@@ -1,5 +1,6 @@
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
+import re
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -32,6 +33,15 @@ def _resolve_account(accounts: list[Account], text: str, account_type: AccountTy
         return pool[0]
     return None
 
+
+def _resolve_transfer_accounts(accounts: list[Account], text: str):
+    parts = re.split(r"\b(?:to|->|into)\b", text.lower(), maxsplit=1)
+    if len(parts) != 2:
+        return None, None
+    def match(fragment: str):
+        matches = [a for a in accounts if any(v and v.lower() in fragment for v in (a.name, a.institution_name))]
+        return matches[0] if len(matches) == 1 else None
+    return match(parts[0]), match(parts[1])
 
 def _candidate(db: Session, user_id: int, text: str, today: date) -> RelationshipCandidate:
     tx_date, body, explicit = extract_date(text, today)
@@ -82,7 +92,11 @@ def _candidate(db: Session, user_id: int, text: str, today: date) -> Relationshi
         if not account:
             missing.append("account")
     elif intent == RelationshipIntent.TRANSFER:
-        missing.extend(["source_account", "destination_account"])
+        account, secondary = _resolve_transfer_accounts(accounts, body)
+        if not account:
+            missing.append("source_account")
+        if not secondary:
+            missing.append("destination_account")
     else:
         account = _resolve_account(accounts, body)
 
@@ -151,6 +165,21 @@ def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidat
             category_id=None,
             transfer_account_id=None,
             transaction_type=TransactionType.EXPENSE,
+            amount=amount,
+            description=candidate.text,
+            transaction_date=tx_date,
+        )
+        db.add(tx)
+        db.flush()
+        return tx.id, None, None
+
+    if intent == RelationshipIntent.TRANSFER:
+        tx = Transaction(
+            user_id=user_id,
+            account_id=candidate.account_id,
+            category_id=None,
+            transfer_account_id=candidate.secondary_account_id,
+            transaction_type=TransactionType.TRANSFER,
             amount=amount,
             description=candidate.text,
             transaction_date=tx_date,
