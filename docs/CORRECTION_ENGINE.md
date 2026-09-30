@@ -64,9 +64,18 @@ A confirmed candidate must still resolve to resources owned by the authenticated
 5. Category correction for INCOME/EXPENSE transactions.
 6. Soft-delete duplicate.
 
+## Financial relationship safety
+
+- Debt repayment transactions are detected through their linked `DebtRepayment.transaction_id`.
+- Correcting a repayment amount updates the repayment amount, linked transaction amount, debt outstanding balance, and debt status atomically.
+- Correcting a repayment date updates both the transaction date and repayment date.
+- A repayment cannot be soft-deleted through generic transaction correction.
+- Transactions linked to office reimbursements are blocked from generic correction so reimbursement state cannot drift.
+- Credit-card purchases and payments remain ledger-derived transaction corrections; no separate balance is stored to synchronize.
+
 ## Next 3F-C slices
 
-1. Financial relationship corrections: lending/repayment and CC settlement without breaking linked records.
+1. Duplicate detection and safe merge.
 2. Duplicate detection and safe merge.
 3. Office reimbursement correction.
 4. Correction history / before-after audit view.
