@@ -50,25 +50,26 @@ def personal_finance_home(user: User = Depends(current_user), db: Session = Depe
         Account.account_type != AccountType.CREDIT_CARD,
     )).all()
     account_ids = [a.id for a in accounts]
-    balances = {}
-    if account_ids:
-        rows = db.execute(select(
-            Transaction.account_id,
-            Transaction.transaction_type,
-            func.sum(Transaction.amount),
-        ).where(
+    balances = {a.id: _money(a.opening_balance) for a in accounts}
+    all_account_ids = [a.id for a in db.scalars(select(Account).where(
+        Account.user_id == user.id, Account.is_active.is_(True)
+    )).all()]
+    if all_account_ids:
+        rows = db.scalars(select(Transaction).where(
             Transaction.user_id == user.id,
             Transaction.is_active.is_(True),
-            Transaction.account_id.in_(account_ids),
-        ).group_by(Transaction.account_id, Transaction.transaction_type)).all()
-        for account_id, tx_type, total in rows:
-            balances.setdefault(account_id, Decimal("0"))
-            amount = _money(total)
-            if tx_type in (TransactionType.INCOME, TransactionType.REFUND):
-                balances[account_id] += amount
-            elif tx_type == TransactionType.EXPENSE:
-                balances[account_id] -= amount
-        available = sum((_money(a.opening_balance) + balances.get(a.id, Decimal("0")) for a in accounts), Decimal("0"))
+            Transaction.account_id.in_(all_account_ids),
+        )).all()
+        for tx in rows:
+            amount = _money(tx.amount)
+            if tx.account_id in balances:
+                if tx.transaction_type in (TransactionType.INCOME, TransactionType.REFUND):
+                    balances[tx.account_id] += amount
+                elif tx.transaction_type in (TransactionType.EXPENSE, TransactionType.TRANSFER):
+                    balances[tx.account_id] -= amount
+            if tx.transaction_type == TransactionType.TRANSFER and tx.transfer_account_id in balances:
+                balances[tx.transfer_account_id] += amount
+    available = sum(balances.values(), Decimal("0"))
     else:
         available = Decimal("0")
 
