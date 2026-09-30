@@ -241,6 +241,15 @@ Relationship-aware entry for lending, borrowing, repayments, credit-card purchas
 ### 3F-C Corrections — /api/v1/corrections
 Transaction and office-reimbursement corrections, safe duplicate merge and correction history.
 
+### 3F-E Personal Finance Home — /api/v1/personal-finance-home
+Permission prefix: transactions.read.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | / | Daily read-only finance home |
+
+Returns available money, current-month income/spending/refunds/net cash flow, budget remaining, credit-card outstanding, money owed/to be repaid, pending office reimbursements, goal/debt signals, unread alerts, top spending categories and recent activity.
+
 ### 3F-D Conversational Finance — /api/v1/conversational-finance
 Permission prefix: transactions.read.
 | Method | Endpoint | Purpose |
