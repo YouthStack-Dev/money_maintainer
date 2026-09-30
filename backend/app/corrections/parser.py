@@ -1,25 +1,48 @@
 import re
 from datetime import date, datetime, timezone
 from decimal import Decimal
+
 from app.corrections.schemas import CorrectionAction
 
 _AMOUNT = re.compile(r"(?:₹|rs\.?\s*)?([0-9][0-9,]*(?:\.\d{1,2})?)", re.I)
 _ID = re.compile(r"\b(?:transaction|txn|tx)\s*#?\s*(\d+)\b", re.I)
 _DATE = re.compile(r"\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{4}))?\b")
+_CONTEXT = re.compile(
+    r"\b(?:that|this|last|latest|previous|recent)\s+(?:transaction|txn|tx)\b"
+    r"|\b(?:that|this)\b",
+    re.I,
+)
 
-def parse_correction(text: str, today: date, transaction_id: int | None = None):
+
+def parse_correction(
+    text: str,
+    today: date,
+    transaction_id: int | None = None,
+    context_transaction_id: int | None = None,
+):
     body = text.strip()
     lower = body.lower()
-    action = CorrectionAction.DELETE if re.search(r"\b(?:delete|remove|duplicate)\b", lower) else CorrectionAction.UPDATE
+    action = (
+        CorrectionAction.DELETE
+        if re.search(r"\b(?:delete|remove|duplicate)\b", lower)
+        else CorrectionAction.UPDATE
+    )
+
     found_id = transaction_id
     if found_id is None:
         match = _ID.search(body)
         if match:
             found_id = int(match.group(1))
+    if found_id is None and _CONTEXT.search(body):
+        found_id = context_transaction_id
 
     amount = None
     if action == CorrectionAction.UPDATE:
-        match = re.search(r"\b(?:to|amount)\s*(?:₹|rs\.?\s*)?([0-9][0-9,]*(?:\.\d{1,2})?)\b", lower, re.I)
+        match = re.search(
+            r"\b(?:to|amount)\s*(?:₹|rs\.?\s*)?([0-9][0-9,]*(?:\.\d{1,2})?)\b",
+            lower,
+            re.I,
+        )
         if match:
             amount = Decimal(match.group(1).replace(",", ""))
         else:
@@ -30,7 +53,11 @@ def parse_correction(text: str, today: date, transaction_id: int | None = None):
     tx_date = None
     match = _DATE.search(body)
     if match:
-        day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3) or today.year)
+        day, month, year = (
+            int(match.group(1)),
+            int(match.group(2)),
+            int(match.group(3) or today.year),
+        )
         tx_date = datetime(year=year, month=month, day=day, tzinfo=timezone.utc)
 
     description = None
@@ -45,7 +72,11 @@ def parse_correction(text: str, today: date, transaction_id: int | None = None):
         missing.append("correction_fields")
 
     confidence = "HIGH" if not missing else "MEDIUM"
-    reason = None if confidence == "HIGH" else "Identify the transaction and the field to change before saving."
+    reason = (
+        None
+        if confidence == "HIGH"
+        else "Identify the transaction and the field to change before saving."
+    )
     return {
         "text": body,
         "action": action,
