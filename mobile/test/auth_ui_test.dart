@@ -51,9 +51,14 @@ void main() {
       ),
     );
 
+    await tester.enterText(find.byType(TextField).at(0), 'Test User');
+    await tester.enterText(find.byType(TextField).at(1), 'test@example.com');
+    await tester.enterText(find.byType(TextField).at(2), 'short');
+    await tester.enterText(find.byType(TextField).at(3), 'short');
+
     await tester.tap(find.text('Create account'));
     await tester.pump();
 
-    expect(find.text('Name, email and password are required.'), findsOneWidget);
+    expect(find.text('Password must be 12-128 characters.'), findsOneWidget);
   });
 }
