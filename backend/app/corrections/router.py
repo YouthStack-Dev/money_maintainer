@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import current_user
-from app.corrections.schemas import CorrectionRequest, CorrectionResponse
+from app.corrections.schemas import CorrectionRequest, CorrectionResponse, CorrectionHistoryEntry
+from app.audit.models import AuditLog
 from app.corrections.service import build_candidate, execute_correction
 from app.users.models import User
 
@@ -38,3 +40,30 @@ def correct_transaction(payload: CorrectionRequest, user: User = Depends(current
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return CorrectionResponse(status="CORRECTED", candidate=candidate, transaction_id=tx.id)
+
+
+@router.get("/history", response_model=list[CorrectionHistoryEntry])
+def correction_history(
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    rows = db.scalars(
+        select(AuditLog)
+        .where(
+            AuditLog.actor_id == user.id,
+            AuditLog.action.like("CORRECTION_%"),
+        )
+        .order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
+        .limit(100)
+    ).all()
+    return [
+        CorrectionHistoryEntry(
+            id=row.id,
+            action=row.action,
+            target_type=row.target_type,
+            target_id=row.target_id,
+            metadata=row.metadata_json or {},
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
