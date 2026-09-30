@@ -12,6 +12,7 @@ from app.recurring_transactions.models import RecurringTransaction, RecurringTra
 from app.debts.models import Debt, DebtRepayment
 from app.permissions.models import Permission, RolePermission
 from app.audit.models import AuditLog
+from app.office_reimbursements.models import OfficeReimbursement
 
 config=context.config
 config.set_main_option("sqlalchemy.url",settings.database_url)
