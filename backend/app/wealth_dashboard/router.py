@@ -57,11 +57,9 @@ def dashboard(
     net_worth = live["net_worth"]
 
     investment_value = sum((h.market_value for h in holdings), Decimal("0"))
-        total_assets = liquid_assets + investment_value + other_assets + lent_receivables
-        total_liabilities = credit_card_debt + borrowed_debt
-        net_worth = total_assets - total_liabilities
-
-    investment_value = sum((h.market_value for h in holdings), Decimal("0"))
+    total_assets = liquid_assets + investment_value + other_assets + lent_receivables
+    total_liabilities = credit_card_debt + borrowed_debt
+    net_worth = total_assets - total_liabilities
     investment_invested = sum((h.invested_value for h in holdings), Decimal("0"))
     unrealized = investment_value - investment_invested
     realized = sum((tx.realized_gain_loss or Decimal("0") for tx in investment_transactions), Decimal("0"))
