@@ -83,6 +83,25 @@ Adds BUY/SELL investment transactions with quantity validation, weighted-average
 Status: Complete
 Provides a read-only unified wealth view across live liquid assets, investments, other assets, lent receivables, credit-card debt and borrowed debt, plus investment performance, debt/goal signals and historical net-worth trend.
 
+### 3F — Personal UX Intelligence
+Status: In progress
+
+#### 3F-A — Quick Entry
+Status: Complete
+Natural-language transaction capture with amount/date/category/account inference, batch parsing, confidence-based confirmation and normal ledger writes.
+
+#### 3F-B — Financial Relationship Entry
+Status: Complete
+Relationship-aware entry for lending, borrowing, repayments, credit-card purchases/payments, salary, refunds, EMI and explicit account transfers. Adds confirmation-safe saving and linked office reimbursement tracking so office money is not treated as salary.
+Endpoints: POST /api/v1/financial-relationships, GET/POST /api/v1/office-reimbursements, POST /api/v1/office-reimbursements/{reimbursement_id}/reimburse.
+
+#### 3F-C — Correction Engine
+Status: Planned
+#### 3F-D — Conversational Finance
+Status: Planned
+#### 3F-E — Personal Finance Home
+Status: Planned
+
 ## Phase 4 — Intelligence / Automation
 Status: Planned
 Potential scope: financial insights, spending analysis, forecasting intelligence, smart categorization, notifications and anomaly detection.
