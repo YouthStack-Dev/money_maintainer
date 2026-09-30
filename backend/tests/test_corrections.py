@@ -138,3 +138,21 @@ def test_office_reimbursement_without_field_needs_confirmation():
     assert result["reimbursement_id"] == 42
     assert "correction_fields" in result["missing"]
     assert result["confidence"] == "MEDIUM"
+
+
+def test_correction_history_entry_preserves_before_after():
+    from app.corrections.schemas import CorrectionHistoryEntry
+
+    entry = CorrectionHistoryEntry(
+        id=7,
+        action="CORRECTION_UPDATE",
+        target_type="Transaction",
+        target_id="42",
+        metadata={
+            "before": {"amount": "100.00", "description": "petrol"},
+            "after": {"amount": "150.00", "description": "petrol"},
+        },
+        created_at=__import__("datetime").datetime(2026, 9, 30),
+    )
+    assert entry.metadata["before"]["amount"] == "100.00"
+    assert entry.metadata["after"]["amount"] == "150.00"
