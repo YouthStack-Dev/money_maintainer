@@ -13,7 +13,7 @@
 - Salary: INCOME.
 - Refund: REFUND.
 - EMI: EXPENSE.
-- Transfers remain deferred until explicit source/destination parsing is added.
+- Explicit transfers: `5000 HDFC to cash` → TRANSFER from HDFC to cash when both accounts can be resolved.\n- Office expense tracking: create an office reimbursement record linked to an existing expense.\n- Office reimbursement: creates a REFUND transaction linked back to the office item; it is not salary.
 
 ## Safety rule
 
@@ -31,10 +31,4 @@ Request: {"text":"7000 lending to Giri"}
 
 A high-confidence relationship is saved immediately. Medium/low-confidence relationships return a structured candidate and missing fields for confirmation.
 
-## Intentionally deferred
-
-- Office reimbursement / office-float mode.
-- Multi-debt repayment disambiguation UI.
-- Explicit transfer source/destination parsing.
-- Correction commands.
-- Natural-language conversational queries.
+## Confirmation flow\n\nIf required information is missing, the endpoint returns `NEEDS_CONFIRMATION` with a structured candidate. The client can resubmit the same text with `confirm=true` and the completed candidate after the user confirms the fields.\n\n## Office reimbursement\n\n`POST /api/v1/office-reimbursements` links an existing personal expense to an office reimbursement record. `POST /api/v1/office-reimbursements/{id}/reimburse?account_id=...` records the reimbursement as a REFUND and marks the office item reimbursed.\n\n## Intentionally deferred\n\n- Multi-debt repayment selection UI when more than one open debt exists for a person.\n- Correction commands.\n- Natural-language conversational queries.
