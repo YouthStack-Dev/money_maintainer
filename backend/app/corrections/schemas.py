@@ -9,6 +9,7 @@ class CorrectionAction(str, Enum):
     UPDATE = "UPDATE"
     DELETE = "DELETE"
     MERGE = "MERGE"
+    OFFICE_REIMBURSEMENT_UPDATE = "OFFICE_REIMBURSEMENT_UPDATE"
 
 
 class CorrectionCandidate(BaseModel):
@@ -16,6 +17,7 @@ class CorrectionCandidate(BaseModel):
     action: CorrectionAction | None = None
     transaction_id: int | None = None
     duplicate_transaction_id: int | None = None
+    reimbursement_id: int | None = None
     amount: Decimal | None = None
     transaction_date: datetime | None = None
     description: str | None = None
