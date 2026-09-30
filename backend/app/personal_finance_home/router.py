@@ -70,8 +70,6 @@ def personal_finance_home(user: User = Depends(current_user), db: Session = Depe
             if tx.transaction_type == TransactionType.TRANSFER and tx.transfer_account_id in balances:
                 balances[tx.transfer_account_id] += amount
     available = sum(balances.values(), Decimal("0"))
-    else:
-        available = Decimal("0")
 
     categories = {c.id: c.name for c in db.scalars(select(Category).where(Category.user_id == user.id)).all()}
     by_category = defaultdict(Decimal)
