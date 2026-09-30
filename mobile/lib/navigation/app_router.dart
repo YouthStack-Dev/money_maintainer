@@ -12,7 +12,7 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
-        return MaterialPageRoute(builder: (_) => LoginScreen(onLoggedIn: () {}));
+        return MaterialPageRoute(builder: (_) => LoginScreen(onLoggedIn: () {}, onRegister: () {}));
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case quickAdd:

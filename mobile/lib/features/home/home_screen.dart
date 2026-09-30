@@ -3,14 +3,49 @@ import 'home_data.dart';
 import 'home_service.dart';
 import '../quick_add/quick_add_screen.dart';
 import '../activity/activity_screen.dart';
+import '../auth/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.onLoggedOut, this.authService});
+
+  final VoidCallback? onLoggedOut;
+  final AuthService? authService;
+
   @override State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   final _service = HomeService();
+  late final AuthService _auth = widget.authService ?? AuthService();
+  bool _loggingOut = false;
+
+  Future<void> _logout() async {
+    if (_loggingOut) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You can sign in again anytime.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _loggingOut = true);
+    try {
+      await _auth.logout();
+      if (mounted) widget.onLoggedOut?.call();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loggingOut = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not contact the server. Please try again.')),
+        );
+      }
+    }
+  }
   late Future<HomeData> _home;
 
   @override void initState() { super.initState(); _home = _service.load(); }
@@ -19,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Money Maintainer'), actions: [IconButton(icon: const Icon(Icons.history), tooltip: 'Activity', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityScreen()))), IconButton(icon: const Icon(Icons.add), tooltip: 'Quick Add', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuickAddScreen())))],),
+    appBar: AppBar(title: const Text('Money Maintainer'), actions: [IconButton(icon: const Icon(Icons.history), tooltip: 'Activity', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityScreen()))), IconButton(icon: const Icon(Icons.add), tooltip: 'Quick Add', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuickAddScreen()))), IconButton(icon: const Icon(Icons.logout), tooltip: 'Log out', onPressed: _loggingOut ? null : _logout)],),
     body: FutureBuilder<HomeData>(
       future: _home,
       builder: (context, snapshot) {

@@ -60,7 +60,8 @@ def infer_type(text: str) -> TransactionType | None:
 
 
 def clean_description(text: str, transaction_type: TransactionType) -> str:
-    value = re.sub(r"\b(for|on|of)\s+(?:today|yesterday)\b", "", text, flags=re.I)
+    value = re.sub(r"^\s*on\s+", "", text, flags=re.I)
+    value = re.sub(r"\b(for|on|of)\s+(?:today|yesterday)\b", "", value, flags=re.I)
     value = re.sub(r"\b(?:paid|received|got)\s+me?\b", "", value, flags=re.I)
     value = re.sub(r"\s+", " ", value).strip(" ,.-")
     return value or transaction_type.value.title()

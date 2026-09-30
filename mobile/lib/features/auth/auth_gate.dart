@@ -55,7 +55,9 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
         if (snapshot.data == true) {
-          return const HomeScreen();
+          return HomeScreen(onLoggedOut: () {
+            setState(() => _session = Future.value(false));
+          });
         }
         if (_showRegister) {
           return RegisterScreen(
