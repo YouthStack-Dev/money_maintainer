@@ -112,3 +112,32 @@ Rules:
 - Account and category changes are not supported through this reimbursement correction intent.
 - Generic transaction correction remains blocked for reimbursement-linked transactions.
 - The expense/reimbursement transaction links and reimbursement status are preserved.
+
+
+## Correction history
+
+Correction history is available at:
+
+`GET /api/v1/corrections/history`
+
+The endpoint returns the latest 100 correction events for the authenticated user.
+
+Each event contains:
+
+- correction action
+- target type and target ID
+- timestamp
+- before values
+- after values
+- related transaction/reimbursement identifiers when applicable
+
+Recorded correction actions include:
+
+- `CORRECTION_UPDATE`
+- `CORRECTION_DELETE`
+- `CORRECTION_MERGE`
+- `CORRECTION_OFFICE_REIMBURSEMENT_UPDATE`
+
+The history is written only after a correction is validated and before the transaction commits, so failed corrections do not create a successful correction-history entry. Sensitive account ownership is enforced through the authenticated actor ID.
+
+For relationship-safe corrections, the history captures the financial relationship context needed to understand the change without replacing the source-of-truth transaction/debt/reimbursement records.
