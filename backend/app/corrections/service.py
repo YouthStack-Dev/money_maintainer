@@ -87,7 +87,7 @@ def build_candidate(db: Session, user_id: int, text: str, today, transaction_id=
     return candidate
 
 
-def _audit_correction(db: Session, user_id: int, action: str, target_id: int, before: dict, after: dict, related: dict | None = None) -> None:
+def _audit_correction(db: Session, user_id: int, action: str, target_id: int, before: dict, after: dict, related: dict | None = None, target_type: str = "Transaction") -> None:
     metadata = {
         "before": before,
         "after": after,
@@ -98,7 +98,7 @@ def _audit_correction(db: Session, user_id: int, action: str, target_id: int, be
         db,
         user_id,
         action,
-        "Transaction",
+        target_type,
         str(target_id),
         metadata,
     )
@@ -194,6 +194,7 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
             before,
             after,
             {"expense_transaction_id": expense_tx.id, "reimbursement_transaction_id": reimbursement_tx.id if reimbursement_tx else None},
+            target_type="OfficeReimbursement",
         )
         db.commit()
         db.refresh(reimbursement)
