@@ -6,13 +6,13 @@ from app.accounts.models import Account
 from app.debts.models import Debt, DebtDirection, DebtRepayment, DebtStatus
 from app.transactions.models import Transaction, TransactionType
 
-def create_debt(db: Session, user_id: int, values: dict) -> Debt:
+def create_debt(db: Session, user_id: int, values: dict, transaction_date: datetime | None = None) -> Debt:
     account = db.scalar(select(Account).where(Account.id == values["account_id"], Account.user_id == user_id, Account.is_active.is_(True)))
     if not account:
         raise ValueError("Account not found or inactive")
     amount = values["original_amount"]
     transaction_type = TransactionType.INCOME if values["direction"] == DebtDirection.BORROWED else TransactionType.EXPENSE
-    transaction = Transaction(user_id=user_id, account_id=account.id, category_id=None, transfer_account_id=None, transaction_type=transaction_type, amount=amount, description=values.get("description") or f"Debt with {values['person_name']}", transaction_date=datetime.now(timezone.utc))
+    transaction = Transaction(user_id=user_id, account_id=account.id, category_id=None, transfer_account_id=None, transaction_type=transaction_type, amount=amount, description=values.get("description") or f"Debt with {values['person_name']}", transaction_date=transaction_date or datetime.now(timezone.utc))
     db.add(transaction)
     db.flush()
     values = {key: value for key, value in values.items() if key != "account_id"}
