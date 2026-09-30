@@ -48,7 +48,10 @@ class _LoginScreenState extends State<LoginScreen> {
       await _auth.login(email: _email.text, password: _password.text);
       if (mounted) widget.onLoggedIn();
     } on ApiException catch (error) {
-      if (mounted) setState(() => _error = error.userMessage);
+      final message = error.statusCode == 401
+          ? 'Email or password is incorrect.'
+          : error.userMessage;
+      if (mounted) setState(() => _error = message);
     } on ApiNetworkException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
