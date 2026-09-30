@@ -12,7 +12,17 @@ def test_borrowed_from_person():
     assert extract_person("5000 borrowed from Sai", intent) == "Sai"
 
 def test_receive_repayment():
-    assert infer_relationship("Giri paid me 3000") == RelationshipIntent.RECEIVE_LENT_REPAYMENT
+    text = "Giri paid me 3000"
+    intent = infer_relationship(text)
+    assert intent == RelationshipIntent.RECEIVE_LENT_REPAYMENT
+    assert extract_person(text, intent) == "Giri"
+
+
+def test_receive_repayment_in_phrase():
+    text = "in sai minus 3500 he paid me"
+    intent = infer_relationship(text)
+    assert intent == RelationshipIntent.RECEIVE_LENT_REPAYMENT
+    assert extract_person(text, intent) == "sai"
 
 def test_credit_card_payment_is_transfer():
     assert infer_relationship("SBI CC 18999 paid") == RelationshipIntent.CREDIT_CARD_PAYMENT
