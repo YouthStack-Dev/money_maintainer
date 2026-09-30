@@ -31,7 +31,7 @@ def parse_correction(text: str, today: date, transaction_id: int | None = None):
     match = _DATE.search(body)
     if match:
         day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3) or today.year)
-        tx_date = datetime(day=day, month=month, year=year, tzinfo=timezone.utc)
+        tx_date = datetime(year=year, month=month, day=day, tzinfo=timezone.utc)
 
     description = None
     desc_match = re.search(r"\b(?:description|note)\s*(?:to|=)\s*(.+)$", body, re.I)
