@@ -16,9 +16,6 @@ class RelationshipIntent(str, Enum):
     TRANSFER = "TRANSFER"
     EMI = "EMI"
 
-class RelationshipRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=1000)
-
 class RelationshipCandidate(BaseModel):
     text: str
     intent: RelationshipIntent | None = None
@@ -32,6 +29,11 @@ class RelationshipCandidate(BaseModel):
     confidence: str
     missing: list[str] = Field(default_factory=list)
     reason: str | None = None
+
+class RelationshipRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+    confirm: bool = False
+    candidate: RelationshipCandidate | None = None
 
 class RelationshipResponse(BaseModel):
     status: str
