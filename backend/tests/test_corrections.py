@@ -105,3 +105,36 @@ def test_merge_same_transaction_needs_confirmation():
     )
     assert "distinct_transactions" in result["missing"]
     assert result["confidence"] == "MEDIUM"
+
+
+def test_office_reimbursement_amount_correction():
+    result = parse_correction(
+        "change office reimbursement 42 amount to 2500",
+        date(2026, 9, 30),
+    )
+    assert result["action"] == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE
+    assert result["reimbursement_id"] == 42
+    assert result["amount"] == Decimal("2500")
+    assert result["confidence"] == "HIGH"
+
+
+def test_office_reimbursement_date_correction():
+    result = parse_correction(
+        "correct office reimbursement 42 date to 21/08",
+        date(2026, 9, 30),
+    )
+    assert result["action"] == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE
+    assert result["reimbursement_id"] == 42
+    assert result["transaction_date"].date() == date(2026, 8, 21)
+    assert result["confidence"] == "HIGH"
+
+
+def test_office_reimbursement_without_field_needs_confirmation():
+    result = parse_correction(
+        "change office reimbursement 42",
+        date(2026, 9, 30),
+    )
+    assert result["action"] == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE
+    assert result["reimbursement_id"] == 42
+    assert "correction_fields" in result["missing"]
+    assert result["confidence"] == "MEDIUM"
