@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.dependencies import current_user
 from app.office_reimbursements.models import OfficeReimbursement, OfficeReimbursementStatus
 from app.office_reimbursements.schemas import OfficeReimbursementCreate, OfficeReimbursementResponse
-from app.transactions.models import Transaction, TransactionType
+from app.transactions.models import Transaction, TransactionType\nfrom app.accounts.models import Account
 from app.users.models import User
 
 router = APIRouter()
@@ -31,6 +31,8 @@ def reimburse(reimbursement_id: int, account_id: int, user: User = Depends(curre
     item = db.scalar(select(OfficeReimbursement).where(OfficeReimbursement.id == reimbursement_id, OfficeReimbursement.user_id == user.id).with_for_update())
     if not item: raise HTTPException(status_code=404, detail="Office reimbursement not found")
     if item.status != OfficeReimbursementStatus.PENDING: raise HTTPException(status_code=400, detail="Office reimbursement is not pending")
+    account = db.scalar(select(Account).where(Account.id == account_id, Account.user_id == user.id, Account.is_active.is_(True)))
+    if not account: raise HTTPException(status_code=400, detail="Account not found or inactive")
     tx = Transaction(user_id=user.id, account_id=account_id, category_id=None, transfer_account_id=None, transaction_type=TransactionType.REFUND, amount=item.amount, description=f"Office reimbursement: {item.description}", transaction_date=item.created_at)
     db.add(tx); db.flush()
     item.reimbursement_transaction_id = tx.id
