@@ -47,6 +47,9 @@ def _period(parsed, context):
 def answer_query(db: Session, user: User, text: str, context=None):
     context = context or {}
     parsed = parse_query(text)
+    if text.strip().lower().startswith("what about ") and context.get("start"):
+        parsed["intent"] = "SPENDING"
+        parsed["category"] = text.strip()[11:].rstrip("?").strip().lower()
     intent = parsed["intent"]
 
     if intent == "SPENDING":
@@ -126,6 +129,9 @@ def answer_query(db: Session, user: User, text: str, context=None):
             Account.is_active.is_(True),
         )).all()
         card_debt = Decimal("0")
+        target = parsed.get("account_name")
+        if target:
+            cards = [card for card in cards if target.lower() in card.name.lower() or target.lower() in (card.institution_name or "").lower()]
         for card in cards:
             if card.credit_limit is not None and card.statement_day is not None and card.payment_due_day is not None:
                 card_debt += max(Decimal("0"), -Decimal(_summary(db, user.id, card).current_balance))
