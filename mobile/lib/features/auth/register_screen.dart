@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_client.dart';
 import 'auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
