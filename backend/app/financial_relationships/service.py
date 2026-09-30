@@ -121,7 +121,7 @@ def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidat
             "person_name": candidate.person_name,
             "original_amount": amount,
             "description": candidate.text,
-        })
+        }, transaction_date=candidate.transaction_date)
         return None, debt.id, None
 
     if intent in {RelationshipIntent.REPAY_BORROWED, RelationshipIntent.RECEIVE_LENT_REPAYMENT}:
