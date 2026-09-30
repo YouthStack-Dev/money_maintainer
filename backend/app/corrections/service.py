@@ -87,6 +87,75 @@ def build_candidate(db: Session, user_id: int, text: str, today, transaction_id=
 
 
 def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate):
+    if candidate.action == CorrectionAction.OFFICE_REIMBURSEMENT_UPDATE:
+        if candidate.reimbursement_id is None:
+            raise ValueError("Office reimbursement id is required")
+        if (
+            candidate.account_id is not None
+            or candidate.category_id is not None
+        ):
+            raise ValueError("Account/category correction is not supported for office reimbursements")
+        reimbursement = db.scalar(
+            select(OfficeReimbursement)
+            .where(
+                OfficeReimbursement.id == candidate.reimbursement_id,
+                OfficeReimbursement.user_id == user_id,
+            )
+            .with_for_update()
+        )
+        if reimbursement is None:
+            raise ValueError("Office reimbursement not found")
+        if reimbursement.status == "CANCELLED":
+            raise ValueError("Cannot correct a cancelled office reimbursement")
+
+        expense_tx = db.scalar(
+            select(Transaction)
+            .where(
+                Transaction.id == reimbursement.expense_transaction_id,
+                Transaction.user_id == user_id,
+                Transaction.is_active.is_(True),
+            )
+            .with_for_update()
+        )
+        if expense_tx is None:
+            raise ValueError("Linked office expense transaction not found")
+
+        reimbursement_tx = None
+        if reimbursement.reimbursement_transaction_id is not None:
+            reimbursement_tx = db.scalar(
+                select(Transaction)
+                .where(
+                    Transaction.id == reimbursement.reimbursement_transaction_id,
+                    Transaction.user_id == user_id,
+                    Transaction.is_active.is_(True),
+                )
+                .with_for_update()
+            )
+            if reimbursement_tx is None:
+                raise ValueError("Linked reimbursement transaction not found")
+
+        if candidate.amount is not None:
+            if candidate.amount <= 0:
+                raise ValueError("Amount must be greater than zero")
+            reimbursement.amount = candidate.amount
+            expense_tx.amount = candidate.amount
+            if reimbursement_tx is not None:
+                reimbursement_tx.amount = candidate.amount
+
+        if candidate.transaction_date is not None:
+            expense_tx.transaction_date = candidate.transaction_date
+            if reimbursement_tx is not None:
+                reimbursement_tx.transaction_date = candidate.transaction_date
+
+        if candidate.description is not None:
+            reimbursement.description = candidate.description
+            if reimbursement_tx is not None:
+                reimbursement_tx.description = f"Office reimbursement: {candidate.description}"
+
+        db.commit()
+        db.refresh(reimbursement)
+        return expense_tx
+
     if candidate.confidence != "HIGH":
         raise ValueError("Correction requires confirmation before saving")
     if candidate.transaction_id is None:
