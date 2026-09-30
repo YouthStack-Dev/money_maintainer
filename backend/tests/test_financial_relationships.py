@@ -27,6 +27,10 @@ def test_receive_repayment_in_phrase():
 def test_credit_card_payment_is_transfer():
     assert infer_relationship("SBI CC 18999 paid") == RelationshipIntent.CREDIT_CARD_PAYMENT
 
+
+def test_explicit_transfer_is_relationship():
+    assert infer_relationship("5000 HDFC to cash") == RelationshipIntent.TRANSFER
+
 def test_credit_card_purchase_is_expense():
     assert infer_relationship("450 petrol Axis CC") == RelationshipIntent.CREDIT_CARD_PURCHASE
 
