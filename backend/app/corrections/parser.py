@@ -12,6 +12,14 @@ _CONTEXT = re.compile(
     r"|\b(?:that|this)\b",
     re.I,
 )
+_ACCOUNT = re.compile(
+    r"\b(?:account|bank|card|wallet)\s*(?:to|=|is|as)\s+(.+?)(?=$|\s+(?:and|but)\b)",
+    re.I,
+)
+_CATEGORY = re.compile(
+    r"\bcategory\s*(?:to|=|is|as)\s+(.+?)(?=$|\s+(?:and|but)\b)",
+    re.I,
+)
 
 
 def parse_correction(
@@ -65,10 +73,24 @@ def parse_correction(
     if desc_match:
         description = desc_match.group(1).strip()
 
+    account_name = None
+    account_match = _ACCOUNT.search(body)
+    if account_match:
+        account_name = account_match.group(1).strip().strip(".")
+    category_name = None
+    category_match = _CATEGORY.search(body)
+    if category_match:
+        category_name = category_match.group(1).strip().strip(".")
+
     missing = []
     if not found_id:
         missing.append("transaction_id")
-    if action == CorrectionAction.UPDATE and amount is None and tx_date is None and description is None:
+
+    has_field = any(
+        value is not None
+        for value in (amount, tx_date, description, account_name, category_name)
+    )
+    if action == CorrectionAction.UPDATE and not has_field:
         missing.append("correction_fields")
 
     confidence = "HIGH" if not missing else "MEDIUM"
@@ -84,6 +106,8 @@ def parse_correction(
         "amount": amount,
         "transaction_date": tx_date,
         "description": description,
+        "account_name": account_name,
+        "category_name": category_name,
         "reason": reason,
         "confidence": confidence,
         "missing": missing,
