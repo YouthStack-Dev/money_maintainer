@@ -96,7 +96,7 @@ class ApiException implements Exception {
       case 400:
         return _detail ?? 'The request could not be completed.';
       case 401:
-        return 'Email or password is incorrect.';
+        return _detail ?? 'Authentication failed. Please sign in again.';
       case 403:
         return _detail ?? 'You are not allowed to perform this action.';
       case 404:
