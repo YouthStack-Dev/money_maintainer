@@ -96,7 +96,8 @@ Relationship-aware entry for lending, borrowing, repayments, credit-card purchas
 Endpoints: POST /api/v1/financial-relationships, GET/POST /api/v1/office-reimbursements, POST /api/v1/office-reimbursements/{reimbursement_id}/reimburse.
 
 #### 3F-C — Correction Engine
-Status: Planned
+Status: In progress
+First slice: amount/date/description corrections and soft-delete of duplicate transactions, with confirmation and ownership safeguards.
 #### 3F-D — Conversational Finance
 Status: Planned
 #### 3F-E — Personal Finance Home
