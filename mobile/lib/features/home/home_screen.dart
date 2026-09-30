@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_data.dart';
 import 'home_service.dart';
 import '../quick_add/quick_add_screen.dart';
+import '../activity/activity_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Money Maintainer'), actions: [IconButton(icon: const Icon(Icons.add), tooltip: 'Quick Add', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuickAddScreen())))],),
+    appBar: AppBar(title: const Text('Money Maintainer'), actions: [IconButton(icon: const Icon(Icons.history), tooltip: 'Activity', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityScreen()))), IconButton(icon: const Icon(Icons.add), tooltip: 'Quick Add', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuickAddScreen())))],),
     body: FutureBuilder<HomeData>(
       future: _home,
       builder: (context, snapshot) {
