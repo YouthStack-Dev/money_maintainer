@@ -44,6 +44,26 @@ def test_context_without_recent_transaction_needs_confirmation():
     assert result["confidence"] == "MEDIUM"
 
 
+def test_account_correction():
+    result = parse_correction(
+        "change transaction 42 account to HDFC",
+        date(2026, 9, 30),
+    )
+    assert result["transaction_id"] == 42
+    assert result["account_name"] == "HDFC"
+    assert result["confidence"] == "HIGH"
+
+
+def test_category_correction():
+    result = parse_correction(
+        "change transaction 42 category to Fuel",
+        date(2026, 9, 30),
+    )
+    assert result["transaction_id"] == 42
+    assert result["category_name"] == "Fuel"
+    assert result["confidence"] == "HIGH"
+
+
 def test_delete_duplicate_transaction():
     result = parse_correction("delete duplicate transaction 42", date(2026, 9, 30))
     assert result["action"] == CorrectionAction.DELETE
