@@ -137,6 +137,15 @@ def build_candidate(db: Session, user_id: int, text: str, today: date) -> Relati
 def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidate):
     if candidate.confidence != "HIGH":
         raise ValueError("Relationship requires confirmation before saving")
+    if candidate.account_id is not None:
+        account = db.scalar(select(Account).where(Account.id == candidate.account_id, Account.user_id == user_id, Account.is_active.is_(True)))
+        if not account:
+            raise ValueError("Primary account is not valid for this user")
+    if candidate.secondary_account_id is not None:
+        account = db.scalar(select(Account).where(Account.id == candidate.secondary_account_id, Account.user_id == user_id, Account.is_active.is_(True)))
+        if not account:
+            raise ValueError("Secondary account is not valid for this user")
+        raise ValueError("Relationship requires confirmation before saving")
     intent = candidate.intent
     amount = Decimal(candidate.amount)
     tx_date = candidate.transaction_date
