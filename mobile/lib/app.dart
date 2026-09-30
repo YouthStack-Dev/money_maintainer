@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'core/theme/app_theme.dart';
-import 'navigation/app_router.dart';
+import 'features/auth/auth_gate.dart';
 
 class MoneyMaintainerApp extends StatelessWidget {
   const MoneyMaintainerApp({super.key});
@@ -11,8 +12,7 @@ class MoneyMaintainerApp extends StatelessWidget {
       title: 'Money Maintainer',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: AppRouter.home,
-      routes: AppRouter.routes,
+      home: const AuthGate(),
     );
   }
 }
