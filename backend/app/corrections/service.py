@@ -91,6 +91,57 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
         raise ValueError("Correction requires confirmation before saving")
     if candidate.transaction_id is None:
         raise ValueError("Transaction id is required")
+    if candidate.action == CorrectionAction.MERGE:
+        if candidate.duplicate_transaction_id is None:
+            raise ValueError("Duplicate transaction id is required")
+        if candidate.duplicate_transaction_id == candidate.transaction_id:
+            raise ValueError("Merge requires two distinct transactions")
+        target = db.scalar(
+            select(Transaction).where(
+                Transaction.id == candidate.transaction_id,
+                Transaction.user_id == user_id,
+                Transaction.is_active.is_(True),
+            ).with_for_update()
+        )
+        duplicate = db.scalar(
+            select(Transaction).where(
+                Transaction.id == candidate.duplicate_transaction_id,
+                Transaction.user_id == user_id,
+                Transaction.is_active.is_(True),
+            ).with_for_update()
+        )
+        if not target or not duplicate:
+            raise ValueError("Both transactions must exist and belong to you")
+        if (
+            target.transaction_type != duplicate.transaction_type
+            or target.amount != duplicate.amount
+            or target.account_id != duplicate.account_id
+            or target.category_id != duplicate.category_id
+            or target.transfer_account_id != duplicate.transfer_account_id
+            or target.transaction_date != duplicate.transaction_date
+        ):
+            raise ValueError("Only exact duplicate transactions can be safely merged")
+        linked = db.scalar(
+            select(DebtRepayment).where(
+                DebtRepayment.transaction_id.in_([target.id, duplicate.id])
+            )
+        )
+        reimbursement = db.scalar(
+            select(OfficeReimbursement).where(
+                OfficeReimbursement.user_id == user_id,
+                (
+                    OfficeReimbursement.expense_transaction_id.in_([target.id, duplicate.id])
+                    | OfficeReimbursement.reimbursement_transaction_id.in_([target.id, duplicate.id])
+                ),
+            )
+        )
+        if linked or reimbursement:
+            raise ValueError("Relationship-linked transactions cannot be merged safely")
+        duplicate.is_active = False
+        db.commit()
+        db.refresh(target)
+        return target
+
     if candidate.action == CorrectionAction.UPDATE and candidate.amount is not None:
         if candidate.amount <= 0:
             raise ValueError("Amount must be greater than zero")
