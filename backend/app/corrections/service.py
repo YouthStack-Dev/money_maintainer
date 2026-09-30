@@ -4,8 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.accounts.models import Account
+from app.debts.models import Debt, DebtRepayment, DebtStatus
 from app.categories.models import Category
 from app.transactions.models import Transaction
+from app.office_reimbursements.models import OfficeReimbursement
 from app.corrections.schemas import CorrectionCandidate, CorrectionAction
 
 _CONTEXT = re.compile(
@@ -104,13 +106,70 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
     if not tx:
         raise ValueError("Transaction not found")
 
+    repayment = db.scalar(
+        select(DebtRepayment)
+        .join(Debt, Debt.id == DebtRepayment.debt_id)
+        .where(
+            DebtRepayment.transaction_id == tx.id,
+            Debt.user_id == user_id,
+        )
+        .with_for_update()
+    )
+    reimbursement = db.scalar(
+        select(OfficeReimbursement).where(
+            OfficeReimbursement.user_id == user_id,
+            (OfficeReimbursement.expense_transaction_id == tx.id)
+            | (OfficeReimbursement.reimbursement_transaction_id == tx.id),
+        ).with_for_update()
+    )
+
+    if reimbursement is not None:
+        raise ValueError(
+            "This transaction is linked to an office reimbursement; use reimbursement correction instead"
+        )
+
     if candidate.action == CorrectionAction.DELETE:
+        if repayment is not None:
+            raise ValueError(
+                "A debt repayment cannot be deleted through transaction correction"
+            )
         tx.is_active = False
     else:
-        if candidate.amount is not None:
+        if repayment is not None and candidate.amount is not None:
+            old_amount = repayment.amount
+            new_amount = candidate.amount
+            delta = new_amount - old_amount
+            debt = db.scalar(
+                select(Debt)
+                .where(Debt.id == repayment.debt_id, Debt.user_id == user_id)
+                .with_for_update()
+            )
+            if debt is None:
+                raise ValueError("Linked debt not found")
+            if debt.status == DebtStatus.CANCELLED:
+                raise ValueError("Cannot correct a repayment for a cancelled debt")
+            new_outstanding = debt.outstanding_amount - delta
+            if new_outstanding < 0:
+                raise ValueError("Repayment correction cannot exceed the debt outstanding balance")
+            debt.outstanding_amount = new_outstanding
+            debt.status = (
+                DebtStatus.SETTLED
+                if new_outstanding == 0
+                else (
+                    DebtStatus.PARTIALLY_PAID
+                    if new_outstanding < debt.original_amount
+                    else DebtStatus.ACTIVE
+                )
+            )
+            repayment.amount = new_amount
+            tx.amount = new_amount
+        elif candidate.amount is not None:
             tx.amount = candidate.amount
+
         if candidate.transaction_date is not None:
             tx.transaction_date = candidate.transaction_date
+            if repayment is not None:
+                repayment.repayment_date = candidate.transaction_date.date()
         if candidate.description is not None:
             tx.description = candidate.description
 
