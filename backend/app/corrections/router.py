@@ -24,15 +24,7 @@ def correct_transaction(payload: CorrectionRequest, user: User = Depends(current
             raise HTTPException(status_code=400, detail="candidate transaction does not match request")
         if (
             payload.candidate.reimbursement_id is not None
-            and payload.candidate.reimbursement_id != (
-                build_candidate(
-                    db,
-                    user.id,
-                    payload.text,
-                    datetime.now(timezone.utc).date(),
-                    payload.transaction_id,
-                ).reimbursement_id
-            )
+            and payload.candidate.reimbursement_id != candidate.reimbursement_id
         ):
             raise HTTPException(status_code=400, detail="candidate reimbursement does not match request")
         if payload.candidate.missing:
