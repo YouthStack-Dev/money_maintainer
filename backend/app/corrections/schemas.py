@@ -41,3 +41,12 @@ class CorrectionResponse(BaseModel):
     status: str
     candidate: CorrectionCandidate
     transaction_id: int | None = None
+
+
+class CorrectionHistoryEntry(BaseModel):
+    id: int
+    action: str
+    target_type: str | None
+    target_id: str | None
+    metadata: dict
+    created_at: datetime
