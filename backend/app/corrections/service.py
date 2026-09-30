@@ -7,7 +7,7 @@ from app.accounts.models import Account
 from app.debts.models import Debt, DebtRepayment, DebtStatus
 from app.categories.models import Category
 from app.transactions.models import Transaction
-from app.office_reimbursements.models import OfficeReimbursement
+from app.office_reimbursements.models import OfficeReimbursement, OfficeReimbursementStatus
 from app.corrections.schemas import CorrectionCandidate, CorrectionAction
 
 _CONTEXT = re.compile(
@@ -105,7 +105,7 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
         )
         if reimbursement is None:
             raise ValueError("Office reimbursement not found")
-        if reimbursement.status == "CANCELLED":
+        if reimbursement.status == OfficeReimbursementStatus.CANCELLED:
             raise ValueError("Cannot correct a cancelled office reimbursement")
 
         expense_tx = db.scalar(
