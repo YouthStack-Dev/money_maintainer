@@ -56,7 +56,7 @@ void main() {
     await tester.enterText(find.byType(TextField).at(2), 'short');
     await tester.enterText(find.byType(TextField).at(3), 'short');
 
-    await tester.tap(find.text('Create account'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pump();
 
     expect(find.text('Password must be 12-128 characters.'), findsOneWidget);
