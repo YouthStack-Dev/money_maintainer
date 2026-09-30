@@ -30,13 +30,25 @@ def parse_correction(
 ):
     body = text.strip()
     lower = body.lower()
+    merge_match = re.search(
+        r"\bmerge\s+(?:transaction|txn|tx)\s*#?\s*(\d+)\s+(?:into|with)\s+(?:transaction|txn|tx)?\s*#?\s*(\d+)\b",
+        lower,
+    )
     action = (
-        CorrectionAction.DELETE
-        if re.search(r"\b(?:delete|remove|duplicate)\b", lower)
-        else CorrectionAction.UPDATE
+        CorrectionAction.MERGE
+        if merge_match
+        else (
+            CorrectionAction.DELETE
+            if re.search(r"\b(?:delete|remove|duplicate)\b", lower)
+            else CorrectionAction.UPDATE
+        )
     )
 
     found_id = transaction_id
+    duplicate_transaction_id = None
+    if merge_match:
+        duplicate_transaction_id = int(merge_match.group(1))
+        found_id = int(merge_match.group(2))
     if found_id is None:
         match = _ID.search(body)
         if match:
@@ -85,6 +97,8 @@ def parse_correction(
     missing = []
     if not found_id:
         missing.append("transaction_id")
+    if action == CorrectionAction.MERGE and duplicate_transaction_id == found_id:
+        missing.append("distinct_transactions")
 
     has_field = any(
         value is not None
@@ -103,6 +117,7 @@ def parse_correction(
         "text": body,
         "action": action,
         "transaction_id": found_id,
+        "duplicate_transaction_id": duplicate_transaction_id,
         "amount": amount,
         "transaction_date": tx_date,
         "description": description,
