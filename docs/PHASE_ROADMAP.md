@@ -105,7 +105,9 @@ Read-only natural-language financial queries over the existing ledger and contro
 Endpoint: POST /api/v1/conversational-finance.
 
 #### 3F-E — Personal Finance Home
-Status: Planned
+Status: Complete
+Provides a read-only daily finance home combining available money, current-month cash flow, spending, budget remaining, credit-card outstanding, money owed/to be repaid, office reimbursement pending, goals, debt deadlines, unread alerts, top spending categories and recent activity.
+Endpoint: GET /api/v1/personal-finance-home.
 
 ## Phase 4 — Intelligence / Automation
 Status: Planned
