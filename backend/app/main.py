@@ -13,6 +13,7 @@ from app.financial_relationships.router import router as financial_relationships
 from app.office_reimbursements.router import router as office_reimbursements_router
 from app.corrections.router import router as corrections_router
 from app.conversational_finance.router import router as conversational_finance_router
+from app.personal_finance_home.router import router as personal_finance_home_router
 from app.summary.router import router as summary_router
 from app.budgets.router import router as budgets_router
 from app.recurring_transactions.router import router as recurring_transactions_router
@@ -50,6 +51,7 @@ app.include_router(financial_relationships_router,prefix="/api/v1/financial-rela
 app.include_router(office_reimbursements_router,prefix="/api/v1/office-reimbursements",tags=["Office Reimbursements"])
 app.include_router(corrections_router,prefix="/api/v1/corrections",tags=["Corrections"])
 app.include_router(conversational_finance_router,prefix="/api/v1/conversational-finance",tags=["Conversational Finance"])
+app.include_router(personal_finance_home_router,prefix="/api/v1/personal-finance-home",tags=["Personal Finance Home"])
 app.include_router(summary_router,prefix="/api/v1/summary",tags=["Financial Summary"])
 app.include_router(budgets_router,prefix="/api/v1/budgets",tags=["Budgets"])
 app.include_router(recurring_transactions_router,prefix="/api/v1/recurring-transactions",tags=["Recurring Transactions"])
