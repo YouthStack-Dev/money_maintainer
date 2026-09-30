@@ -189,6 +189,8 @@ def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidat
         return tx.id, None, None
 
     if intent == RelationshipIntent.CREDIT_CARD_PAYMENT:
+        if candidate.account_id == candidate.secondary_account_id:
+            raise ValueError("Payment source and credit card must be different")
         tx = Transaction(
             user_id=user_id,
             account_id=candidate.account_id,
