@@ -17,6 +17,11 @@ def correct_transaction(payload: CorrectionRequest, user: User = Depends(current
             raise HTTPException(status_code=400, detail="candidate is required when confirm=true")
         if payload.candidate.text != payload.text:
             raise HTTPException(status_code=400, detail="candidate text must match request text")
+        if (
+            payload.transaction_id is not None
+            and payload.candidate.transaction_id != payload.transaction_id
+        ):
+            raise HTTPException(status_code=400, detail="candidate transaction does not match request")
         if payload.candidate.missing:
             raise HTTPException(status_code=400, detail="candidate still has missing fields")
         candidate = payload.candidate
