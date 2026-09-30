@@ -1,10 +1,6 @@
 import re
-from datetime import date
 
-from app.quick_entry.parser import extract_amount, extract_date
 from app.financial_relationships.schemas import RelationshipIntent
-
-_PERSON_RE = re.compile(r"\b(?:to|from|with|in|on)\s+([A-Za-z][A-Za-z .'-]{1,80}?)(?=\s+(?:for|on|from|to)\b|$)", re.I)
 
 def infer_relationship(text: str) -> RelationshipIntent | None:
     s = text.lower()
@@ -38,5 +34,8 @@ def extract_person(text: str, intent: RelationshipIntent | None) -> str | None:
     if intent == RelationshipIntent.BORROW:
         m = re.search(r"\bfrom\s+([A-Za-z][A-Za-z .'-]{1,80})$", s, re.I)
         return m.group(1).strip() if m else None
-    m = re.search(r"\b(?:to|from|in)\s+([A-Za-z][A-Za-z .'-]{1,80})(?:\s+(?:he|she|paid|gave)\b|$)", s, re.I)
+    m = re.search(r"\b(?:to|from|in)\s+([A-Za-z][A-Za-z .'-]{1,80}?)(?:\s+(?:he|she|paid|gave)\b|$)", s, re.I)
+    if m:
+        return m.group(1).strip()
+    m = re.match(r"^([A-Za-z][A-Za-z .'-]{1,80}?)\s+(?:paid|returned|repaid)\b", s, re.I)
     return m.group(1).strip() if m else None
