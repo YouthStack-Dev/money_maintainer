@@ -229,6 +229,28 @@ Permission prefix: wealth_dashboard.*.
 
 The dashboard is read-only and derives its current position from existing domain records. Historical trend data comes from 3C net-worth snapshots. No new financial source of truth or ledger transactions are created.
 
+
+## 3F Personal UX Intelligence
+
+### 3F-A Quick Entry — /api/v1/quick-entry
+Natural-language transaction capture with confidence-based saving and confirmation.
+
+### 3F-B Financial Relationships — /api/v1/financial-relationships
+Relationship-aware entry for lending, borrowing, repayments, credit-card purchases/payments, salary, refunds, EMI and transfers.
+
+### 3F-C Corrections — /api/v1/corrections
+Transaction and office-reimbursement corrections, safe duplicate merge and correction history.
+
+### 3F-D Conversational Finance — /api/v1/conversational-finance
+Permission prefix: transactions.read.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | / | Answer a read-only natural-language financial question |
+
+Supported intents include spending by period/category, money owed to the user, money the user owes, credit-card status, budget status, savings/cash flow, net worth and financial summary. The response includes structured data, follow-up context and suggested follow-up questions.
+
+The endpoint is read-only and does not create or modify financial records. Transfers are excluded from spending/cash-flow expense totals, while refunds are reported separately and included in net cash flow/savings.
+
 # System
 ## Health
 | Method | Endpoint | Purpose |
