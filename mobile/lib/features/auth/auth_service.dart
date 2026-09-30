@@ -11,6 +11,21 @@ class AuthService {
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
 
+  Future<void> register({
+    required String email,
+    required String fullName,
+    required String password,
+  }) async {
+    await _apiClient.post(
+      '/api/v1/auth/register',
+      query: {
+        'email': email.trim(),
+        'full_name': fullName.trim(),
+        'password': password,
+      },
+    );
+  }
+
   Future<void> login({
     required String email,
     required String password,
