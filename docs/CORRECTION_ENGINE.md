@@ -79,3 +79,13 @@ A confirmed candidate must still resolve to resources owned by the authenticated
 2. Duplicate detection and safe merge.
 3. Office reimbursement correction.
 4. Correction history / before-after audit view.
+
+
+## Duplicate detection and safe merge
+
+- Duplicate merge syntax: `merge transaction 43 into transaction 42`.
+- Transaction 42 is retained; transaction 43 is soft-deleted.
+- A merge is allowed only when both active transactions belong to the same user and match exactly on type, amount, account, category, transfer destination, and transaction date.
+- The two transaction IDs must be different.
+- Debt-repayment-linked and office-reimbursement-linked transactions cannot be merged through the generic correction engine.
+- This slice does not attempt fuzzy duplicate matching or automatic merging based on similar descriptions.
