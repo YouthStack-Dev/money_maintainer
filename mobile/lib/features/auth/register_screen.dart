@@ -70,6 +70,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       widget.onRegistered();
     } on ApiException catch (error) {
       if (mounted) setState(() => _error = error.userMessage);
+    } on ApiNetworkException catch (error) {
+      if (mounted) setState(() => _error = error.message);
     } catch (_) {
       if (mounted) setState(() => _error = 'Something went wrong. Please try again.');
     } finally {
