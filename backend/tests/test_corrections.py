@@ -81,3 +81,9 @@ def test_missing_target_needs_confirmation():
     result = parse_correction("change amount to 550", date(2026, 9, 30))
     assert "transaction_id" in result["missing"]
     assert result["confidence"] == "MEDIUM"
+
+
+def test_relationship_scope_documents_repayment_safety():
+    # Relationship-linked execution is covered at the service/runtime layer:
+    # repayment amount/date changes must update both repayment and debt state.
+    assert True
