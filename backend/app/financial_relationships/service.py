@@ -70,6 +70,19 @@ def _candidate(db: Session, user_id: int, text: str, today: date) -> Relationshi
         account = _resolve_account(accounts, body)
         if not account:
             missing.append("account")
+        if person and intent in {RelationshipIntent.REPAY_BORROWED, RelationshipIntent.RECEIVE_LENT_REPAYMENT}:
+            direction = DebtDirection.BORROWED if intent == RelationshipIntent.REPAY_BORROWED else DebtDirection.LENT
+            open_debts = db.scalars(
+                select(Debt).where(
+                    Debt.user_id == user_id,
+                    Debt.direction == direction,
+                    Debt.person_name.ilike(person),
+                    Debt.status.in_([DebtStatus.ACTIVE, DebtStatus.PARTIALLY_PAID]),
+                )
+            ).all()
+            if len(open_debts) != 1:
+                missing.append("matching_open_debt")
+                reason = "Repayment must match exactly one open debt for this person."
     elif intent == RelationshipIntent.CREDIT_CARD_PURCHASE:
         account = _resolve_account(accounts, body, AccountType.CREDIT_CARD)
         if not account:
