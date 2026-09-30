@@ -48,34 +48,38 @@ def build_candidate(db: Session, user_id: int, text: str, today, transaction_id=
     candidate = CorrectionCandidate(**parsed)
 
     if candidate.account_name:
-        account = db.scalar(
+        accounts = db.scalars(
             select(Account).where(
                 Account.user_id == user_id,
                 Account.is_active.is_(True),
                 Account.name.ilike(candidate.account_name),
             )
-        )
-        if account:
-            candidate.account_id = account.id
+        ).all()
+        if len(accounts) == 1:
+            candidate.account_id = accounts[0].id
         else:
             candidate.missing.append("account")
             candidate.confidence = "MEDIUM"
-            candidate.reason = "Choose an active account owned by you."
+            candidate.reason = (
+                "Choose one active account owned by you."
+                if accounts
+                else "Choose an active account owned by you."
+            )
 
     if candidate.category_name:
-        category = db.scalar(
+        categories = db.scalars(
             select(Category).where(
                 Category.user_id == user_id,
                 Category.is_active.is_(True),
                 Category.name.ilike(candidate.category_name),
             )
-        )
-        if category:
-            candidate.category_id = category.id
+        ).all()
+        if len(categories) == 1:
+            candidate.category_id = categories[0].id
         else:
             candidate.missing.append("category")
             candidate.confidence = "MEDIUM"
-            candidate.reason = "Choose an active category owned by you."
+            candidate.reason = "Choose one active category owned by you."
 
     return candidate
 
@@ -134,6 +138,10 @@ def execute_correction(db: Session, user_id: int, candidate: CorrectionCandidate
             )
             if not category:
                 raise ValueError("Category not found")
+            if tx.transaction_type.value not in {"INCOME", "EXPENSE"}:
+                raise ValueError(
+                    "Category correction is only supported for income and expense transactions"
+                )
             expected_type = "INCOME" if tx.transaction_type.value == "INCOME" else "EXPENSE"
             if category.category_type.value != expected_type:
                 raise ValueError(
