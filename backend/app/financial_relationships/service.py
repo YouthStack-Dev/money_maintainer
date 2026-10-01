@@ -150,6 +150,8 @@ def execute_candidate(db: Session, user_id: int, candidate: RelationshipCandidat
     tx_date = candidate.transaction_date
 
     if intent in {RelationshipIntent.LEND, RelationshipIntent.BORROW}:
+        if candidate.account_id is None:
+            raise ValueError("A valid account is required for lending or borrowing")
         debt = create_debt(db, user_id, {
             "direction": DebtDirection.LENT if intent == RelationshipIntent.LEND else DebtDirection.BORROWED,
             "account_id": candidate.account_id,

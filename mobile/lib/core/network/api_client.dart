@@ -16,8 +16,8 @@ class ApiClient {
   final TokenStorage _tokenStorage;
 
   Future<dynamic> get(String path, {Map<String, String>? query}) async {
-    final uri = Uri.parse(AppConfig.apiBaseUrl + path)
-        .replace(queryParameters: query);
+    final uri =
+        Uri.parse(AppConfig.apiBaseUrl + path).replace(queryParameters: query);
     try {
       final response = await _client
           .get(uri, headers: await _headers())
@@ -26,11 +26,14 @@ class ApiClient {
     } on ApiException {
       rethrow;
     } on TimeoutException {
-      throw const ApiNetworkException('The request timed out. Check your connection and try again.');
+      throw const ApiNetworkException(
+          'The request timed out. Check your connection and try again.');
     } on SocketException {
-      throw const ApiNetworkException('Unable to reach the server. Check your connection and try again.');
+      throw const ApiNetworkException(
+          'Unable to reach the server. Check your connection and try again.');
     } on http.ClientException {
-      throw const ApiNetworkException('Unable to connect to the server. Please try again.');
+      throw const ApiNetworkException(
+          'Unable to connect to the server. Please try again.');
     }
   }
 
@@ -39,8 +42,8 @@ class ApiClient {
     Map<String, String>? query,
     Object? body,
   }) async {
-    final uri = Uri.parse(AppConfig.apiBaseUrl + path)
-        .replace(queryParameters: query);
+    final uri =
+        Uri.parse(AppConfig.apiBaseUrl + path).replace(queryParameters: query);
     try {
       final response = await _client
           .post(
@@ -53,11 +56,61 @@ class ApiClient {
     } on ApiException {
       rethrow;
     } on TimeoutException {
-      throw const ApiNetworkException('The request timed out. Check your connection and try again.');
+      throw const ApiNetworkException(
+          'The request timed out. Check your connection and try again.');
     } on SocketException {
-      throw const ApiNetworkException('Unable to reach the server. Check your connection and try again.');
+      throw const ApiNetworkException(
+          'Unable to reach the server. Check your connection and try again.');
     } on http.ClientException {
-      throw const ApiNetworkException('Unable to connect to the server. Please try again.');
+      throw const ApiNetworkException(
+          'Unable to connect to the server. Please try again.');
+    }
+  }
+
+  Future<dynamic> patch(String path,
+      {Map<String, String>? query, Object? body}) async {
+    final uri =
+        Uri.parse(AppConfig.apiBaseUrl + path).replace(queryParameters: query);
+    try {
+      final response = await _client
+          .patch(uri,
+              headers: await _headers(),
+              body: body == null ? null : jsonEncode(body))
+          .timeout(const Duration(seconds: 20));
+      return _decode(response);
+    } on ApiException {
+      rethrow;
+    } on TimeoutException {
+      throw const ApiNetworkException(
+          'The request timed out. Check your connection and try again.');
+    } on SocketException {
+      throw const ApiNetworkException(
+          'Unable to reach the server. Check your connection and try again.');
+    } on http.ClientException {
+      throw const ApiNetworkException(
+          'Unable to connect to the server. Please try again.');
+    }
+  }
+
+  Future<dynamic> delete(String path, {Map<String, String>? query}) async {
+    final uri =
+        Uri.parse(AppConfig.apiBaseUrl + path).replace(queryParameters: query);
+    try {
+      final response = await _client
+          .delete(uri, headers: await _headers())
+          .timeout(const Duration(seconds: 20));
+      return _decode(response);
+    } on ApiException {
+      rethrow;
+    } on TimeoutException {
+      throw const ApiNetworkException(
+          'The request timed out. Check your connection and try again.');
+    } on SocketException {
+      throw const ApiNetworkException(
+          'Unable to reach the server. Check your connection and try again.');
+    } on http.ClientException {
+      throw const ApiNetworkException(
+          'Unable to connect to the server. Please try again.');
     }
   }
 
@@ -66,8 +119,7 @@ class ApiClient {
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty)
-        'Authorization': 'Bearer ' + token,
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer ' + token,
     };
   }
 
@@ -141,7 +193,8 @@ class ApiException implements Exception {
   }
 
   @override
-  String toString() => 'ApiException(' + statusCode.toString() + '): ' + body.toString();
+  String toString() =>
+      'ApiException(' + statusCode.toString() + '): ' + body.toString();
 }
 
 class ApiNetworkException implements Exception {

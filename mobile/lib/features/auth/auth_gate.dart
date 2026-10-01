@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../home/home_screen.dart';
+import '../../core/network/api_client.dart';
 import 'auth_service.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -20,7 +21,26 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    _session = _auth.hasSession();
+    _session = _restoreSession();
+  }
+
+  Future<bool> _restoreSession() async {
+    if (!await _auth.hasSession()) return false;
+    try {
+      await _auth.me();
+      return true;
+    } on ApiException catch (error) {
+      if (error.statusCode != 401) return true;
+      try {
+        await _auth.refresh();
+        await _auth.me();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    } catch (_) {
+      return true;
+    }
   }
 
   void _loggedIn() {

@@ -85,7 +85,8 @@ def parse_correction(
         else:
             match = _AMOUNT.search(body)
             if match and re.search(r"\b(?:change|correct|update)\b", lower):
-                amount = Decimal(match.group(1).replace(",", ""))
+                if not (office_reimbursement and match.group(1).replace(",", "") == str(reimbursement_id)):
+                    amount = Decimal(match.group(1).replace(",", ""))
 
     tx_date = None
     match = _DATE.search(body)

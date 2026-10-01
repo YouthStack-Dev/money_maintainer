@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from app.core.access import authorize_path
 from app.core.database import SessionLocal
 from app.core.audit import audit
@@ -37,7 +38,11 @@ async def permission_and_audit_middleware(request: Request,call_next):
   actor_id=authorize_path(db,request.headers.get("authorization"),request.url.path,request.method); response=await call_next(request)
   if actor_id and request.method in {"POST","PATCH","PUT","DELETE"}: audit(db,actor_id,f"{request.method} {request.url.path}","API",request.url.path); db.commit()
   return response
- except Exception: db.rollback(); raise
+ except HTTPException as exc:
+  db.rollback()
+  return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail}, headers=exc.headers)
+ except Exception:
+  db.rollback(); raise
  finally: db.close()
 
 app.include_router(auth_router,prefix="/api/v1/auth",tags=["Auth"])

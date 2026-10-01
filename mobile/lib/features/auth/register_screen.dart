@@ -4,7 +4,8 @@ import '../../core/network/api_client.dart';
 import 'auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key, required this.onRegistered, required this.onBackToLogin});
+  const RegisterScreen(
+      {super.key, required this.onRegistered, required this.onBackToLogin});
 
   final VoidCallback onRegistered;
   final VoidCallback onBackToLogin;
@@ -74,7 +75,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on ApiNetworkException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Something went wrong. Please try again.');
+      if (mounted)
+        setState(() => _error = 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -122,8 +124,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: 'Password',
                       helperText: 'Use 12-128 characters.',
                       suffixIcon: IconButton(
-                        tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        tooltip: _obscurePassword
+                            ? 'Show password'
+                            : 'Hide password',
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                         icon: Icon(_obscurePassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined),
@@ -141,8 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         tooltip: _obscureConfirmPassword
                             ? 'Show password'
                             : 'Hide password',
-                        onPressed: () => setState(
-                            () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        onPressed: () => setState(() =>
+                            _obscureConfirmPassword = !_obscureConfirmPassword),
                         icon: Icon(_obscureConfirmPassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined),

@@ -1,4 +1,5 @@
-from datetime import datetime, timezone\nfrom decimal import Decimal
+from datetime import datetime, timezone
+from decimal import Decimal
 from enum import Enum
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column

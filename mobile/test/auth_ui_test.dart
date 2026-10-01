@@ -12,11 +12,13 @@ void main() {
       'Authentication failed. Please sign in again.',
     );
     expect(
-      const ApiException(409, {'detail': 'Email already registered'}).userMessage,
+      const ApiException(409, {'detail': 'Email already registered'})
+          .userMessage,
       'Email already registered',
     );
     expect(
-      const ApiException(429, {'detail': 'Too many failed login attempts'}).userMessage,
+      const ApiException(429, {'detail': 'Too many failed login attempts'})
+          .userMessage,
       'Too many failed login attempts',
     );
     expect(
@@ -41,7 +43,8 @@ void main() {
     expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
   });
 
-  testWidgets('register validates password length before API call', (tester) async {
+  testWidgets('register validates password length before API call',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: RegisterScreen(

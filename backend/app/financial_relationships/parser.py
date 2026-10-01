@@ -29,10 +29,10 @@ def infer_relationship(text: str) -> RelationshipIntent | None:
 def extract_person(text: str, intent: RelationshipIntent | None) -> str | None:
     s = text.strip()
     if intent == RelationshipIntent.LEND:
-        m = re.search(r"\bto\s+([A-Za-z][A-Za-z .'-]{1,80})$", s, re.I)
+        m = re.search(r"\bto\s+([A-Za-z][A-Za-z .'-]{1,80}?)(?:\s+from\s+|\s+using\s+|$)", s, re.I)
         return m.group(1).strip() if m else None
     if intent == RelationshipIntent.BORROW:
-        m = re.search(r"\bfrom\s+([A-Za-z][A-Za-z .'-]{1,80})$", s, re.I)
+        m = re.search(r"\bfrom\s+([A-Za-z][A-Za-z .'-]{1,80}?)(?:\s+using\s+|\s+from\s+|$)", s, re.I)
         return m.group(1).strip() if m else None
     m = re.search(r"\b(?:to|from|in)\s+([A-Za-z][A-Za-z .'-]{1,80}?)(?:\s+(?:he|she|paid|gave)\b|$)", s, re.I)
     if m:

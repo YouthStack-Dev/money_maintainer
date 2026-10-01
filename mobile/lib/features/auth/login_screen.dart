@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
 import 'auth_service.dart';
+import 'forgot_password_screen.dart';
+import 'reset_password_screen.dart';
+import 'verify_email_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     super.key,
     required this.onLoggedIn,
     required this.onRegister,
+    this.onPasswordChanged,
   });
 
   final VoidCallback onLoggedIn;
   final VoidCallback onRegister;
+  final VoidCallback? onPasswordChanged;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -51,7 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final message = error.statusCode == 401
           ? 'Email or password is incorrect.'
           : error.userMessage;
-      if (mounted) setState(() => _error = message);
+      if (mounted) {
+        setState(() => _error = message);
+      }
+      if (mounted && error.statusCode == 403) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Verify your email before signing in.')));
+      }
     } on ApiNetworkException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
@@ -134,6 +145,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Text('Sign in'),
                   ),
                   const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _loading
+                        ? null
+                        : () => Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ForgotPasswordScreen(
+                                onBack: () => Navigator.pop(context)))),
+                    child: const Text('Forgot password?'),
+                  ),
+                  Wrap(alignment: WrapAlignment.center, spacing: 4, children: [
+                    TextButton(
+                        onPressed: _loading
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => VerifyEmailScreen(
+                                        onBack: () => Navigator.pop(context)))),
+                        child: const Text('Verify email')),
+                    TextButton(
+                        onPressed: _loading
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => ResetPasswordScreen(
+                                        onBack: () => Navigator.pop(context)))),
+                        child: const Text('I have a reset token')),
+                  ]),
                   TextButton(
                     onPressed: _loading ? null : widget.onRegister,
                     child: const Text('Create a new account'),

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class BudgetCreate(BaseModel):
     category_id: int
-    name: str
+    name: str = Field(min_length=1, max_length=120)
     amount: Decimal = Field(gt=0, max_digits=15, decimal_places=2)
     period_start: datetime
     period_end: datetime
@@ -20,7 +20,7 @@ class BudgetCreate(BaseModel):
 
 class BudgetUpdate(BaseModel):
     category_id: int | None = None
-    name: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=120)
     amount: Decimal | None = Field(default=None, gt=0, max_digits=15, decimal_places=2)
     period_start: datetime | None = None
     period_end: datetime | None = None

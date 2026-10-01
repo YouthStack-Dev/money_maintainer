@@ -15,7 +15,6 @@ def create_debt(db: Session, user_id: int, values: dict, transaction_date: datet
     transaction = Transaction(user_id=user_id, account_id=account.id, category_id=None, transfer_account_id=None, transaction_type=transaction_type, amount=amount, description=values.get("description") or f"Debt with {values['person_name']}", transaction_date=transaction_date or datetime.now(timezone.utc))
     db.add(transaction)
     db.flush()
-    values = {key: value for key, value in values.items() if key != "account_id"}
     item = Debt(user_id=user_id, outstanding_amount=amount, **values)
     db.add(item); db.commit(); db.refresh(item); return item
 

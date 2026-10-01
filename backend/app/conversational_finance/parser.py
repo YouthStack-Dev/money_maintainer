@@ -34,7 +34,7 @@ def parse_query(text: str, today: date | None = None) -> dict:
         intent = "MONEY_OWED_TO_ME"
     elif re.search(r"\b(how\s+much\s+do\s+i\s+owe|what\s+do\s+i\s+owe|my\s+debt|borrowed|owe)", t):
         intent = "MONEY_I_OWE"
-    elif re.search(r"\b(credit\s*card|cc)\b.*\b(pending|outstanding|due|balance)", t):
+    elif (re.search(r"\b(credit\s*card|cc)\b.*\b(pending|outstanding|due|balance)", t) or re.search(r"\b(pending|outstanding|due|balance)\b.*\b(credit\s*card|cc)\b", t)):
         intent = "CREDIT_CARD_STATUS"
     elif re.search(r"\b(net\s+worth|wealth)", t):
         intent = "NET_WORTH"
