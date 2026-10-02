@@ -1,0 +1,1 @@
+import 'package:flutter/material.dart';import 'package:flutter_test/flutter_test.dart';import 'package:money_maintainer_mobile/features/credit/presentation/credit_page.dart';void main(){testWidgets('credit page renders',(tester)async{await tester.pumpWidget(const MaterialApp(home:CreditPage(accessToken:'')));expect(find.text('Credit'),findsOneWidget);});}
