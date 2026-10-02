@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_interpolation_to_compose_strings, use_build_context_synchronously
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
