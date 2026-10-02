@@ -1,7 +1,9 @@
-// ignore_for_file: prefer_interpolation_to_compose_strings, curly_braces_in_flow_control_structures
+// ignore_for_file: prefer_interpolation_to_compose_strings
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../../../core/config/app_environment.dart';
 import '../../../core/errors/app_exception.dart';
 
@@ -16,23 +18,27 @@ class LendingItem {
     required this.dueDate,
     required this.status,
   });
+
   final int id;
-  final String direction, personName;
+  final String direction;
+  final String personName;
   final String? description;
-  final double originalAmount, outstandingAmount;
+  final double originalAmount;
+  final double outstandingAmount;
   final DateTime? dueDate;
   final String status;
-  factory LendingItem.fromJson(Map<String, dynamic> j) => LendingItem(
-    id: (j['id'] as num).toInt(),
-    direction: j['direction']?.toString() ?? 'LENT',
-    personName: j['person_name']?.toString() ?? '',
-    description: j['description']?.toString(),
-    originalAmount: (j['original_amount'] as num).toDouble(),
-    outstandingAmount: (j['outstanding_amount'] as num).toDouble(),
-    dueDate: j['due_date'] == null
+
+  factory LendingItem.fromJson(Map<String, dynamic> json) => LendingItem(
+    id: (json['id'] as num).toInt(),
+    direction: json['direction']?.toString() ?? 'LENT',
+    personName: json['person_name']?.toString() ?? '',
+    description: json['description']?.toString(),
+    originalAmount: (json['original_amount'] as num).toDouble(),
+    outstandingAmount: (json['outstanding_amount'] as num).toDouble(),
+    dueDate: json['due_date'] == null
         ? null
-        : DateTime.parse(j['due_date'].toString()),
-    status: j['status']?.toString() ?? 'ACTIVE',
+        : DateTime.parse(json['due_date'].toString()),
+    status: json['status']?.toString() ?? 'ACTIVE',
   );
 }
 
@@ -43,102 +49,133 @@ class LendingSummary {
     required this.borrowedCount,
     required this.lentCount,
   });
-  final double borrowed, lent;
-  final int borrowedCount, lentCount;
-  factory LendingSummary.fromJson(Map<String, dynamic> j) => LendingSummary(
-    borrowed: (j['total_borrowed_outstanding'] as num).toDouble(),
-    lent: (j['total_lent_outstanding'] as num).toDouble(),
-    borrowedCount: (j['active_borrowed_count'] as num).toInt(),
-    lentCount: (j['active_lent_count'] as num).toInt(),
+
+  final double borrowed;
+  final double lent;
+  final int borrowedCount;
+  final int lentCount;
+
+  factory LendingSummary.fromJson(Map<String, dynamic> json) => LendingSummary(
+    borrowed: (json['total_borrowed_outstanding'] as num).toDouble(),
+    lent: (json['total_lent_outstanding'] as num).toDouble(),
+    borrowedCount: (json['active_borrowed_count'] as num).toInt(),
+    lentCount: (json['active_lent_count'] as num).toInt(),
   );
 }
 
 class LendingAccount {
   const LendingAccount({required this.id, required this.name});
+
   final int id;
   final String name;
-  factory LendingAccount.fromJson(Map<String, dynamic> j) => LendingAccount(
-    id: (j['id'] as num).toInt(),
-    name: j['name']?.toString() ?? '',
+
+  factory LendingAccount.fromJson(Map<String, dynamic> json) => LendingAccount(
+    id: (json['id'] as num).toInt(),
+    name: json['name']?.toString() ?? '',
   );
 }
 
 class LendingApi {
   LendingApi({required this.config, http.Client? client})
     : _client = client ?? http.Client();
+
   final AppEnvironmentConfig config;
   final http.Client _client;
   static const _timeout = Duration(seconds: 15);
+
   Map<String, String> _headers(String token) => {
     'Accept': 'application/json',
     'Authorization': 'Bearer ' + token,
   };
+
   Uri _uri(String path) {
-    final b = Uri.parse(config.apiBaseUrl);
-    return b.replace(path: b.path + path);
+    final base = Uri.parse(config.apiBaseUrl);
+    return base.replace(path: base.path + path);
   }
 
   Future<http.Response> _request(Future<http.Response> Function() call) async {
     try {
       return await call().timeout(_timeout);
     } on TimeoutException {
-      throw const NetworkException('The server took too long to respond.');
-    } catch (e) {
-      if (e is AppException) rethrow;
-      throw NetworkException('Unable to reach the server: ' + e.toString());
+      throw const NetworkException(
+        'The server took too long to respond. Please try again.',
+      );
+    } on AppException {
+      rethrow;
+    } catch (error) {
+      throw NetworkException('Unable to reach the server: ' + error.toString());
     }
   }
 
-  dynamic _decode(http.Response r, String fallback) {
-    dynamic d;
+  dynamic _decode(http.Response response, String fallback) {
+    dynamic data;
     try {
-      d = jsonDecode(r.body);
+      data = jsonDecode(response.body);
     } catch (_) {
-      throw ApiException('Invalid server response.', statusCode: r.statusCode);
-    }
-    if (r.statusCode < 200 || r.statusCode >= 300)
       throw ApiException(
-        d is Map ? d['detail']?.toString() ?? fallback : fallback,
-        statusCode: r.statusCode,
+        'Invalid server response.',
+        statusCode: response.statusCode,
       );
-    return d;
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = data is Map<String, dynamic> ? data['detail'] : null;
+      var message = fallback;
+      if (detail is String && detail.trim().isNotEmpty) {
+        message = detail;
+      } else if (detail is List && detail.isNotEmpty) {
+        final first = detail.first;
+        if (first is Map && first['msg'] != null) {
+          message = first['msg'].toString();
+        }
+      }
+      throw ApiException(message, statusCode: response.statusCode);
+    }
+
+    return data;
   }
 
   Future<List<LendingItem>> list(String token) async {
-    final r = await _request(
+    final response = await _request(
       () => _client.get(_uri('/api/v1/debts'), headers: _headers(token)),
     );
-    final d = _decode(r, 'Unable to load lending records.') as List;
-    return d
-        .map((x) => LendingItem.fromJson(Map<String, dynamic>.from(x as Map)))
+    final data = _decode(response, 'Unable to load lending records.') as List;
+    return data
+        .map(
+          (item) =>
+              LendingItem.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
         .toList();
   }
 
   Future<LendingSummary> summary(String token) async {
-    final r = await _request(
+    final response = await _request(
       () =>
           _client.get(_uri('/api/v1/debts/summary'), headers: _headers(token)),
     );
     return LendingSummary.fromJson(
       Map<String, dynamic>.from(
-        _decode(r, 'Unable to load lending summary.') as Map,
+        _decode(response, 'Unable to load lending summary.') as Map,
       ),
     );
   }
 
   Future<List<LendingAccount>> accounts(String token) async {
-    final r = await _request(
+    final response = await _request(
       () => _client.get(_uri('/api/v1/accounts'), headers: _headers(token)),
     );
-    final d = _decode(r, 'Unable to load accounts.') as List;
-    return d
+    final data = _decode(response, 'Unable to load accounts.') as List;
+    final seen = <int>{};
+    return data
         .map(
-          (x) => LendingAccount.fromJson(Map<String, dynamic>.from(x as Map)),
+          (item) =>
+              LendingAccount.fromJson(Map<String, dynamic>.from(item as Map)),
         )
+        .where((account) => seen.add(account.id))
         .toList();
   }
 
-  Future<void> create(
+  Future<LendingItem> create(
     String token, {
     required String direction,
     required int accountId,
@@ -147,7 +184,7 @@ class LendingApi {
     String? description,
     DateTime? dueDate,
   }) async {
-    final r = await _request(
+    final response = await _request(
       () => _client.post(
         _uri('/api/v1/debts'),
         headers: {..._headers(token), 'Content-Type': 'application/json'},
@@ -163,7 +200,11 @@ class LendingApi {
         }),
       ),
     );
-    _decode(r, 'Unable to create lending record.');
+    return LendingItem.fromJson(
+      Map<String, dynamic>.from(
+        _decode(response, 'Unable to create lending record.') as Map,
+      ),
+    );
   }
 
   Future<void> repay(
@@ -174,7 +215,7 @@ class LendingApi {
     required DateTime date,
     String? note,
   }) async {
-    final r = await _request(
+    final response = await _request(
       () => _client.post(
         _uri('/api/v1/debts/' + debtId.toString() + '/repayments'),
         headers: {..._headers(token), 'Content-Type': 'application/json'},
@@ -186,16 +227,16 @@ class LendingApi {
         }),
       ),
     );
-    _decode(r, 'Unable to record repayment.');
+    _decode(response, 'Unable to record repayment.');
   }
 
   Future<void> cancel(String token, int id) async {
-    final r = await _request(
+    final response = await _request(
       () => _client.delete(
         _uri('/api/v1/debts/' + id.toString()),
         headers: _headers(token),
       ),
     );
-    _decode(r, 'Unable to cancel this record.');
+    _decode(response, 'Unable to cancel this record.');
   }
 }

@@ -76,7 +76,8 @@ class _LendingPageState extends State<LendingPage> {
         note = TextEditingController();
     int accountId = accounts.first.id;
     DateTime? due;
-    final saved = await showModalBottomSheet<bool>(
+    var saving = false;
+    final saved = await showModalBottomSheet<LendingItem?>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -100,6 +101,7 @@ class _LendingPageState extends State<LendingPage> {
                 const SizedBox(height: 14),
                 TextField(
                   controller: person,
+                  enabled: !saving,
                   decoration: const InputDecoration(
                     labelText: 'Person name',
                     prefixIcon: Icon(Icons.person_outline),
@@ -108,6 +110,7 @@ class _LendingPageState extends State<LendingPage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: amount,
+                  enabled: !saving,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -126,11 +129,14 @@ class _LendingPageState extends State<LendingPage> {
                             DropdownMenuItem(value: a.id, child: Text(a.name)),
                       )
                       .toList(),
-                  onChanged: (v) => setSheet(() => accountId = v ?? accountId),
+                  onChanged: saving
+                      ? null
+                      : (v) => setSheet(() => accountId = v ?? accountId),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: note,
+                  enabled: !saving,
                   decoration: const InputDecoration(
                     labelText: 'Note (optional)',
                   ),
@@ -148,51 +154,70 @@ class _LendingPageState extends State<LendingPage> {
                               due!.year.toString(),
                   ),
                   leading: const Icon(Icons.event_outlined),
-                  onTap: () async {
-                    final d = await showDatePicker(
-                      context: sheet,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                      initialDate: due ?? DateTime.now(),
-                    );
-                    if (d != null) setSheet(() => due = d);
-                  },
+                  onTap: saving
+                      ? null
+                      : () async {
+                          final d = await showDatePicker(
+                            context: sheet,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                            initialDate: due ?? DateTime.now(),
+                          );
+                          if (d != null) setSheet(() => due = d);
+                        },
                 ),
-                FilledButton(
-                  onPressed: () async {
-                    final p = person.text.trim(),
-                        a = double.tryParse(amount.text);
-                    if (p.isEmpty || a == null || a <= 0) {
-                      ScaffoldMessenger.of(sheet).showSnackBar(
-                        const SnackBar(
-                          content: Text('Enter a person and valid amount.'),
-                        ),
-                      );
-                      return;
-                    }
-                    try {
-                      await api.create(
-                        widget.accessToken,
-                        direction: direction,
-                        accountId: accountId,
-                        personName: p,
-                        amount: a,
-                        description: note.text,
-                        dueDate: due,
-                      );
-                      if (sheet.mounted) Navigator.pop(sheet, true);
-                    } catch (e) {
-                      ScaffoldMessenger.of(sheet).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            e is AppException ? e.message : 'Unable to save.',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    direction == 'LENT'
+                FilledButton.icon(
+                  onPressed: saving
+                      ? null
+                      : () async {
+                          final p = person.text.trim(),
+                              a = double.tryParse(amount.text);
+                          if (p.isEmpty || a == null || a <= 0) {
+                            ScaffoldMessenger.of(sheet).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Enter a person and valid amount.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          setSheet(() => saving = true);
+                          try {
+                            final created = await api.create(
+                              widget.accessToken,
+                              direction: direction,
+                              accountId: accountId,
+                              personName: p,
+                              amount: a,
+                              description: note.text,
+                              dueDate: due,
+                            );
+                            if (sheet.mounted) Navigator.pop(sheet, created);
+                          } catch (e) {
+                            if (sheet.mounted) setSheet(() => saving = false);
+                            ScaffoldMessenger.of(sheet).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  e is AppException
+                                      ? e.message
+                                      : 'Unable to save.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                  icon: saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check),
+                  label: Text(
+                    saving
+                        ? 'Saving...'
+                        : direction == 'LENT'
                         ? 'Save lent money'
                         : 'Save borrowed money',
                   ),
@@ -206,7 +231,15 @@ class _LendingPageState extends State<LendingPage> {
     person.dispose();
     amount.dispose();
     note.dispose();
-    if (saved == true) await load();
+    if (saved != null && mounted) {
+      setState(() {
+        items = [saved, ...items.where((item) => item.id != saved.id)];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lending record added successfully.')),
+      );
+      await load();
+    }
   }
 
   Future<void> repayRecord(LendingItem item) async {
@@ -217,6 +250,7 @@ class _LendingPageState extends State<LendingPage> {
         note = TextEditingController();
     int accountId = accounts.first.id;
     DateTime date = DateTime.now();
+    var saving = false;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -244,6 +278,7 @@ class _LendingPageState extends State<LendingPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: amount,
+                enabled: !saving,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -261,11 +296,14 @@ class _LendingPageState extends State<LendingPage> {
                       (a) => DropdownMenuItem(value: a.id, child: Text(a.name)),
                     )
                     .toList(),
-                onChanged: (v) => setSheet(() => accountId = v ?? accountId),
+                onChanged: saving
+                    ? null
+                    : (v) => setSheet(() => accountId = v ?? accountId),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: note,
+                enabled: !saving,
                 decoration: const InputDecoration(labelText: 'Note (optional)'),
               ),
               ListTile(
@@ -279,53 +317,68 @@ class _LendingPageState extends State<LendingPage> {
                       date.year.toString(),
                 ),
                 leading: const Icon(Icons.event_outlined),
-                onTap: () async {
-                  final d = await showDatePicker(
-                    context: sheet,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2100),
-                    initialDate: date,
-                  );
-                  if (d != null) setSheet(() => date = d);
-                },
+                onTap: saving
+                    ? null
+                    : () async {
+                        final d = await showDatePicker(
+                          context: sheet,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                          initialDate: date,
+                        );
+                        if (d != null) setSheet(() => date = d);
+                      },
               ),
-              FilledButton(
-                onPressed: () async {
-                  final a = double.tryParse(amount.text);
-                  if (a == null || a <= 0 || a > item.outstandingAmount) {
-                    ScaffoldMessenger.of(sheet).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Enter an amount within outstanding balance.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                  try {
-                    await api.repay(
-                      widget.accessToken,
-                      debtId: item.id,
-                      accountId: accountId,
-                      amount: a,
-                      date: date,
-                      note: note.text,
-                    );
-                    if (sheet.mounted) Navigator.pop(sheet, true);
-                  } catch (e) {
-                    ScaffoldMessenger.of(sheet).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          e is AppException
-                              ? e.message
-                              : 'Unable to record repayment.',
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: Text(
-                  item.direction == 'LENT'
+              FilledButton.icon(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        final a = double.tryParse(amount.text);
+                        if (a == null || a <= 0 || a > item.outstandingAmount) {
+                          ScaffoldMessenger.of(sheet).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Enter an amount within outstanding balance.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        setSheet(() => saving = true);
+                        try {
+                          await api.repay(
+                            widget.accessToken,
+                            debtId: item.id,
+                            accountId: accountId,
+                            amount: a,
+                            date: date,
+                            note: note.text,
+                          );
+                          if (sheet.mounted) Navigator.pop(sheet, true);
+                        } catch (e) {
+                          if (sheet.mounted) setSheet(() => saving = false);
+                          ScaffoldMessenger.of(sheet).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e is AppException
+                                    ? e.message
+                                    : 'Unable to record repayment.',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                icon: saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check),
+                label: Text(
+                  saving
+                      ? 'Saving...'
+                      : item.direction == 'LENT'
                       ? 'Record received'
                       : 'Record repayment',
                 ),
@@ -337,7 +390,14 @@ class _LendingPageState extends State<LendingPage> {
     );
     amount.dispose();
     note.dispose();
-    if (saved == true) await load();
+    if (saved == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Repayment recorded successfully.')),
+        );
+      }
+      await load();
+    }
   }
 
   Future<void> cancelRecord(LendingItem item) async {

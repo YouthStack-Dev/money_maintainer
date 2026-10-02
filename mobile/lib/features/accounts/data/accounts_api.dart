@@ -1,13 +1,171 @@
 // ignore_for_file: prefer_interpolation_to_compose_strings
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../../../core/config/app_environment.dart';
 import '../../../core/errors/app_exception.dart';
-class AccountItem{const AccountItem({required this.id,required this.name,required this.type,required this.institution,required this.balance,required this.active});final int id;final String name,type;final String? institution;final double balance;final bool active;factory AccountItem.fromJson(Map<String,dynamic> j)=>AccountItem(id:(j['id'] as num).toInt(),name:j['name']?.toString()??'',type:j['account_type']?.toString()??'CASH',institution:j['institution_name']?.toString(),balance:(j['opening_balance'] as num?)?.toDouble()??0,active:j['is_active']==true);}
-class AccountsApi{AccountsApi({required this.config,http.Client? client}):_c=client??http.Client();final AppEnvironmentConfig config;final http.Client _c;static const _t=Duration(seconds:15);Map<String,String> _h(String t)=>{'Accept':'application/json','Authorization':'Bearer '+t};Uri _u(String p){final b=Uri.parse(config.apiBaseUrl);return b.replace(path:b.path+p);}Future<http.Response> _r(Future<http.Response> Function() f)async{try{return await f().timeout(_t);}on TimeoutException{throw const NetworkException('The server took too long to respond.');}catch(e){if(e is AppException)rethrow;throw NetworkException('Unable to reach the server: '+e.toString());}}
-dynamic _d(http.Response r){dynamic d;try{d=jsonDecode(r.body);}catch(_){throw ApiException('Invalid server response.',statusCode:r.statusCode);}if(r.statusCode<200||r.statusCode>=300)throw ApiException(d is Map?d['detail']?.toString()??'Account request failed.':'Account request failed.',statusCode:r.statusCode);return d;}
-Future<List<AccountItem>> list(String t)async{final r=await _r(()=>_c.get(_u('/api/v1/accounts'),headers:_h(t)));final d=_d(r) as List;return d.map((x)=>AccountItem.fromJson(Map<String,dynamic>.from(x as Map))).toList();}
-Future<void> create(String t,String n,String type,String inst,double bal)async{final r=await _r(()=>_c.post(_u('/api/v1/accounts'),headers:{..._h(t),'Content-Type':'application/json'},body:jsonEncode({'name':n,'account_type':type,'institution_name':inst.isEmpty?null:inst,'currency':'INR','opening_balance':bal})));_d(r);}
-Future<void> update(String t,int id,String n,String inst,double bal)async{final r=await _r(()=>_c.patch(_u('/api/v1/accounts/'+id.toString()),headers:{..._h(t),'Content-Type':'application/json'},body:jsonEncode({'name':n,'institution_name':inst.isEmpty?null:inst,'opening_balance':bal})));_d(r);}
-Future<void> remove(String t,int id)async{final r=await _r(()=>_c.delete(_u('/api/v1/accounts/'+id.toString()),headers:_h(t)));_d(r);}}
+
+class AccountItem {
+  const AccountItem({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.institution,
+    required this.balance,
+    required this.active,
+  });
+
+  final int id;
+  final String name;
+  final String type;
+  final String? institution;
+  final double balance;
+  final bool active;
+
+  factory AccountItem.fromJson(Map<String, dynamic> json) => AccountItem(
+    id: (json['id'] as num).toInt(),
+    name: json['name']?.toString() ?? '',
+    type: json['account_type']?.toString() ?? 'CASH',
+    institution: json['institution_name']?.toString(),
+    balance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
+    active: json['is_active'] == true,
+  );
+}
+
+class AccountsApi {
+  AccountsApi({required this.config, http.Client? client})
+    : _client = client ?? http.Client();
+
+  final AppEnvironmentConfig config;
+  final http.Client _client;
+  static const _timeout = Duration(seconds: 15);
+
+  Map<String, String> _headers(String token) => {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + token,
+  };
+
+  Uri _uri(String path) {
+    final base = Uri.parse(config.apiBaseUrl);
+    return base.replace(path: base.path + path);
+  }
+
+  Future<http.Response> _request(Future<http.Response> Function() call) async {
+    try {
+      return await call().timeout(_timeout);
+    } on TimeoutException {
+      throw const NetworkException(
+        'The server took too long to respond. Please try again.',
+      );
+    } on AppException {
+      rethrow;
+    } catch (error) {
+      throw NetworkException('Unable to reach the server: ' + error.toString());
+    }
+  }
+
+  dynamic _decode(http.Response response) {
+    dynamic data;
+    try {
+      data = jsonDecode(response.body);
+    } catch (_) {
+      throw ApiException(
+        'Invalid server response.',
+        statusCode: response.statusCode,
+      );
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = data is Map<String, dynamic> ? data['detail'] : null;
+      var message =
+          'Account request failed (' + response.statusCode.toString() + ').';
+      if (detail is String && detail.trim().isNotEmpty) {
+        message = detail;
+      } else if (detail is List && detail.isNotEmpty) {
+        final first = detail.first;
+        if (first is Map && first['msg'] != null) {
+          message = first['msg'].toString();
+        }
+      }
+      throw ApiException(message, statusCode: response.statusCode);
+    }
+
+    return data;
+  }
+
+  Future<List<AccountItem>> list(String token) async {
+    final response = await _request(
+      () => _client.get(_uri('/api/v1/accounts'), headers: _headers(token)),
+    );
+    final data = _decode(response) as List;
+
+    final seen = <int>{};
+    return data
+        .map(
+          (item) =>
+              AccountItem.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .where((account) => seen.add(account.id))
+        .toList();
+  }
+
+  Future<AccountItem> create(
+    String token,
+    String name,
+    String type,
+    String institution,
+    double balance,
+  ) async {
+    final response = await _request(
+      () => _client.post(
+        _uri('/api/v1/accounts'),
+        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'account_type': type,
+          'institution_name': institution.isEmpty ? null : institution,
+          'currency': 'INR',
+          'opening_balance': balance,
+        }),
+      ),
+    );
+    return AccountItem.fromJson(
+      Map<String, dynamic>.from(_decode(response) as Map),
+    );
+  }
+
+  Future<AccountItem> update(
+    String token,
+    int id,
+    String name,
+    String institution,
+    double balance,
+  ) async {
+    final response = await _request(
+      () => _client.patch(
+        _uri('/api/v1/accounts/' + id.toString()),
+        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'institution_name': institution.isEmpty ? null : institution,
+          'opening_balance': balance,
+        }),
+      ),
+    );
+    return AccountItem.fromJson(
+      Map<String, dynamic>.from(_decode(response) as Map),
+    );
+  }
+
+  Future<void> remove(String token, int id) async {
+    final response = await _request(
+      () => _client.delete(
+        _uri('/api/v1/accounts/' + id.toString()),
+        headers: _headers(token),
+      ),
+    );
+    _decode(response);
+  }
+}
