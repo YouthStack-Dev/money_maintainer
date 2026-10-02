@@ -28,7 +28,7 @@ class AuthTokenRefresher {
 
     final base = Uri.parse(config.apiBaseUrl);
     final uri = base.replace(
-      path: base.path + '/api/v1/auth/refresh',
+      path: '${base.path}/api/v1/auth/refresh',
       queryParameters: {'refresh_token_value': refreshToken},
     );
 
