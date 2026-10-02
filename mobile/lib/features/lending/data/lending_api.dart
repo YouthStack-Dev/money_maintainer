@@ -78,7 +78,7 @@ class LendingAccount {
 
 class LendingApi {
   LendingApi({required this.config, http.Client? client})
-    : _client = client ?? http.Client();
+      : _client = client ?? http.Client();
 
   final AppEnvironmentConfig config;
   final http.Client _client;
@@ -128,7 +128,6 @@ class LendingApi {
         statusCode: response.statusCode,
       );
     }
-
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final detail = data is Map<String, dynamic> ? data['detail'] : null;
       var message = response.statusCode == 401
@@ -144,14 +143,14 @@ class LendingApi {
       }
       throw ApiException(message, statusCode: response.statusCode);
     }
-
     return data;
   }
 
   Future<List<LendingItem>> list(String token) async {
     final response = await _request(
       token,
-      (accessToken) => _client.get(_uri('/api/v1/debts'), headers: _headers(accessToken)),
+      (accessToken) =>
+          _client.get(_uri('/api/v1/debts'), headers: _headers(accessToken)),
     );
     final data = _decode(response, 'Unable to load lending records.') as List;
     return data
@@ -164,8 +163,11 @@ class LendingApi {
 
   Future<LendingSummary> summary(String token) async {
     final response = await _request(
-      () =>
-          _client.get(_uri('/api/v1/debts/summary'), headers: _headers(token)),
+      token,
+      (accessToken) => _client.get(
+        _uri('/api/v1/debts/summary'),
+        headers: _headers(accessToken),
+      ),
     );
     return LendingSummary.fromJson(
       Map<String, dynamic>.from(
@@ -176,7 +178,9 @@ class LendingApi {
 
   Future<List<LendingAccount>> accounts(String token) async {
     final response = await _request(
-      () => _client.get(_uri('/api/v1/accounts'), headers: _headers(token)),
+      token,
+      (accessToken) =>
+          _client.get(_uri('/api/v1/accounts'), headers: _headers(accessToken)),
     );
     final data = _decode(response, 'Unable to load accounts.') as List;
     final seen = <int>{};
@@ -199,7 +203,8 @@ class LendingApi {
     DateTime? dueDate,
   }) async {
     final response = await _request(
-      () => _client.post(
+      token,
+      (accessToken) => _client.post(
         _uri('/api/v1/debts'),
         headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -230,9 +235,10 @@ class LendingApi {
     String? note,
   }) async {
     final response = await _request(
-      () => _client.post(
+      token,
+      (accessToken) => _client.post(
         _uri('/api/v1/debts/' + debtId.toString() + '/repayments'),
-        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
           'account_id': accountId,
           'amount': amount,
@@ -246,9 +252,10 @@ class LendingApi {
 
   Future<void> cancel(String token, int id) async {
     final response = await _request(
-      () => _client.delete(
+      token,
+      (accessToken) => _client.delete(
         _uri('/api/v1/debts/' + id.toString()),
-        headers: _headers(token),
+        headers: _headers(accessToken),
       ),
     );
     _decode(response, 'Unable to cancel this record.');
