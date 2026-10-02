@@ -10,9 +10,12 @@ class AuthRepository {
   static const _accessTokenKey = 'auth.access_token';
   static const _refreshTokenKey = 'auth.refresh_token';
   static const _roleKey = 'auth.role';
+  static const _emailKey = 'auth.email';
 
   final AuthApi _api;
   final SecureStorage _storage;
+
+  Future<String> get savedEmail async => await _storage.read(_emailKey) ?? '';
 
   Future<AuthSession?> restoreSession() async {
     final token = await _storage.read(_refreshTokenKey);
@@ -29,20 +32,30 @@ class AuthRepository {
 
   Future<AuthSession> login({required String email, required String pin}) async {
     final session = await _api.login(email: email, pin: pin);
-    await _save(session);
+    await _save(session, email: email);
     return session;
   }
 
-  Future<AuthSession> register({required String email, required String fullName, required String pin}) async {
-    final session = await _api.register(email: email, fullName: fullName, pin: pin);
-    await _save(session);
+  Future<AuthSession> register({
+    required String email,
+    required String fullName,
+    required String pin,
+  }) async {
+    final session = await _api.register(
+      email: email,
+      fullName: fullName,
+      pin: pin,
+    );
+    await _save(session, email: email);
     return session;
   }
 
   Future<void> logout() async {
     final token = await _storage.read(_refreshTokenKey);
     if (token != null && token.isNotEmpty) {
-      try { await _api.logout(token); } catch (_) {}
+      try {
+        await _api.logout(token);
+      } catch (_) {}
     }
     await clearSession();
   }
@@ -51,11 +64,15 @@ class AuthRepository {
     await _storage.delete(_accessTokenKey);
     await _storage.delete(_refreshTokenKey);
     await _storage.delete(_roleKey);
+    await _storage.delete(_emailKey);
   }
 
-  Future<void> _save(AuthSession session) async {
+  Future<void> _save(AuthSession session, {String? email}) async {
     await _storage.write(_accessTokenKey, session.accessToken);
     await _storage.write(_refreshTokenKey, session.refreshToken);
     await _storage.write(_roleKey, session.role);
+    if (email != null && email.isNotEmpty) {
+      await _storage.write(_emailKey, email.trim());
+    }
   }
 }
