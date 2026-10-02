@@ -15,6 +15,7 @@ class _CreditPageState extends State<CreditPage> {
   late final CreditApi api;
   List<CreditCardSummary> cards = [];
   bool loading = true;
+  bool _operationInProgress = false;
   String? error;
   @override
   void initState() {
@@ -46,6 +47,8 @@ class _CreditPageState extends State<CreditPage> {
 
   String money(double v) => '₹ ' + v.toStringAsFixed(2);
   Future<void> configure(CreditCardSummary card) async {
+    if (_operationInProgress) return;
+    setState(() => _operationInProgress = true);
     final limitController = TextEditingController(
       text: card.limit.toStringAsFixed(2),
     );
@@ -54,13 +57,13 @@ class _CreditPageState extends State<CreditPage> {
     );
     final dueController = TextEditingController(text: card.dueDay.toString());
 
+    var saving = false;
     final ok = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheet) => StatefulBuilder(
         builder: (sheet, setSheet) {
-          var saving = false;
 
           Future<void> submit() async {
             if (saving) return;
@@ -187,6 +190,7 @@ class _CreditPageState extends State<CreditPage> {
       }
       await load();
     }
+    if (mounted) setState(() => _operationInProgress = false);
   }
 
   @override
@@ -266,7 +270,7 @@ class _CreditPageState extends State<CreditPage> {
                 ),
               ),
               IconButton(
-                onPressed: () => configure(card),
+                onPressed: _operationInProgress ? null : () => configure(card),
                 icon: const Icon(Icons.settings_outlined),
               ),
             ],
