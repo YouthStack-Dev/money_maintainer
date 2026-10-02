@@ -16,11 +16,11 @@ class AppEnvironmentConfig {
 
   static const staging = AppEnvironmentConfig(
     environment: AppEnvironment.staging,
-    apiBaseUrl: 'https://staging-api.moneymmaintainer.example',
+    apiBaseUrl: String.fromEnvironment('MM_STAGING_API_URL'),
   );
 
   static const production = AppEnvironmentConfig(
     environment: AppEnvironment.production,
-    apiBaseUrl: 'https://api.moneymmaintainer.example',
+    apiBaseUrl: String.fromEnvironment('MM_PRODUCTION_API_URL'),
   );
 }
