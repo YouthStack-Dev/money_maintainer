@@ -17,6 +17,7 @@ class _LendingPageState extends State<LendingPage> {
   LendingSummary? summary;
   List<LendingAccount> accounts = [];
   bool loading = true;
+  bool _operationInProgress = false;
   String? error;
   int filter = 0;
   @override
@@ -65,12 +66,14 @@ class _LendingPageState extends State<LendingPage> {
       .toList();
 
   Future<void> addRecord(String direction) async {
+    if (_operationInProgress) return;
     if (accounts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add an active account first.')),
       );
       return;
     }
+    setState(() => _operationInProgress = true);
     final person = TextEditingController(),
         amount = TextEditingController(),
         note = TextEditingController();
@@ -240,10 +243,12 @@ class _LendingPageState extends State<LendingPage> {
       );
       await load();
     }
+    if (mounted) setState(() => _operationInProgress = false);
   }
 
   Future<void> repayRecord(LendingItem item) async {
-    if (accounts.isEmpty) return;
+    if (_operationInProgress || accounts.isEmpty) return;
+    setState(() => _operationInProgress = true);
     final amount = TextEditingController(
           text: item.outstandingAmount.toStringAsFixed(2),
         ),
@@ -398,6 +403,7 @@ class _LendingPageState extends State<LendingPage> {
       }
       await load();
     }
+    if (mounted) setState(() => _operationInProgress = false);
   }
 
   Future<void> cancelRecord(LendingItem item) async {
@@ -459,7 +465,7 @@ class _LendingPageState extends State<LendingPage> {
                 ),
               ),
               PopupMenuButton<String>(
-                onSelected: (v) => addRecord(v),
+                onSelected: _operationInProgress ? null : (v) => addRecord(v),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'LENT', child: Text('Lend money')),
                   PopupMenuItem(value: 'BORROWED', child: Text('Borrow money')),
