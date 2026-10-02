@@ -22,7 +22,7 @@ void main() {
       overdueDebts: 0,
       upcomingDebts: 1,
       unreadAlerts: 2,
-      recentActivity: const [
+      recentActivity: [
         RecentActivity(
           type: 'EXPENSE',
           amount: 80,
