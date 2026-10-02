@@ -20,6 +20,7 @@ class _MoneyPageState extends State<MoneyPage> {
   List<MoneyAccount> accounts = [];
   List<MoneyCategory> categories = [];
   bool loading = true;
+  bool _operationInProgress = false;
   String? error;
 
   @override
@@ -75,8 +76,11 @@ class _MoneyPageState extends State<MoneyPage> {
   }
 
   Future<void> openForm([MoneyTransaction? old]) async {
-    final saved = await form(old);
-    if (saved == null || !mounted) return;
+    if (_operationInProgress) return;
+    setState(() => _operationInProgress = true);
+    try {
+      final saved = await form(old);
+      if (saved == null || !mounted) return;
 
     setState(() {
       if (old == null) {
@@ -100,6 +104,9 @@ class _MoneyPageState extends State<MoneyPage> {
     // Reconcile the local result with the server. If the refresh fails,
     // the just-created/updated entry remains visible instead of disappearing.
     await load();
+    } finally {
+      if (mounted) setState(() => _operationInProgress = false);
+    }
   }
 
   Future<MoneyTransaction?> form([MoneyTransaction? old]) async {
@@ -481,7 +488,7 @@ class _MoneyPageState extends State<MoneyPage> {
       ),
     ),
     floatingActionButton: FloatingActionButton.extended(
-      onPressed: loading ? null : openForm,
+      onPressed: loading || _operationInProgress ? null : openForm,
       icon: const Icon(Icons.add),
       label: const Text('Add entry'),
     ),
@@ -524,7 +531,7 @@ class _MoneyPageState extends State<MoneyPage> {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: openForm,
+            onPressed: _operationInProgress ? null : openForm,
             icon: const Icon(Icons.add),
             label: const Text('Add entry'),
           ),
