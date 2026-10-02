@@ -80,7 +80,7 @@ class MoneyTransaction {
 
 class MoneyApi {
   MoneyApi({required this.config, http.Client? client})
-    : _client = client ?? http.Client();
+      : _client = client ?? http.Client();
 
   final AppEnvironmentConfig config;
   final http.Client _client;
@@ -130,12 +130,13 @@ class MoneyApi {
         statusCode: response.statusCode,
       );
     }
-
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final detail = data is Map<String, dynamic> ? data['detail'] : null;
       var message = response.statusCode == 401
-        ? 'Your session expired. Please sign in again.'
-        : 'Money request failed (' + response.statusCode.toString() + ').';
+          ? 'Your session expired. Please sign in again.'
+          : 'Money request failed (' +
+                response.statusCode.toString() +
+                ').';
       if (detail is String && detail.trim().isNotEmpty) {
         message = detail;
       } else if (detail is List && detail.isNotEmpty) {
@@ -146,14 +147,14 @@ class MoneyApi {
       }
       throw ApiException(message, statusCode: response.statusCode);
     }
-
     return data;
   }
 
   Future<List<MoneyAccount>> accounts(String token) async {
     final response = await _request(
       token,
-      (accessToken) => _client.get(_uri('/api/v1/accounts'), headers: _headers(accessToken)),
+      (accessToken) =>
+          _client.get(_uri('/api/v1/accounts'), headers: _headers(accessToken)),
     );
     final data = _decode(response) as List;
     final seen = <int>{};
@@ -168,7 +169,11 @@ class MoneyApi {
 
   Future<List<MoneyCategory>> categories(String token) async {
     final response = await _request(
-      () => _client.get(_uri('/api/v1/categories'), headers: _headers(token)),
+      token,
+      (accessToken) => _client.get(
+        _uri('/api/v1/categories'),
+        headers: _headers(accessToken),
+      ),
     );
     final data = _decode(response) as List;
     final seen = <int>{};
@@ -183,13 +188,18 @@ class MoneyApi {
 
   Future<List<MoneyTransaction>> list(String token) async {
     final response = await _request(
-      () => _client.get(_uri('/api/v1/transactions'), headers: _headers(token)),
+      token,
+      (accessToken) => _client.get(
+        _uri('/api/v1/transactions'),
+        headers: _headers(accessToken),
+      ),
     );
     final data = _decode(response) as List;
     return data
         .map(
-          (item) =>
-              MoneyTransaction.fromJson(Map<String, dynamic>.from(item as Map)),
+          (item) => MoneyTransaction.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
         )
         .toList();
   }
@@ -205,7 +215,8 @@ class MoneyApi {
     required DateTime date,
   }) async {
     final response = await _request(
-      () => _client.post(
+      token,
+      (accessToken) => _client.post(
         _uri('/api/v1/transactions'),
         headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -236,9 +247,10 @@ class MoneyApi {
     required DateTime date,
   }) async {
     final response = await _request(
-      () => _client.patch(
+      token,
+      (accessToken) => _client.patch(
         _uri('/api/v1/transactions/' + id.toString()),
-        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
           'account_id': accountId,
           'category_id': categoryId,
@@ -257,9 +269,10 @@ class MoneyApi {
 
   Future<void> remove(String token, int id) async {
     final response = await _request(
-      () => _client.delete(
+      token,
+      (accessToken) => _client.delete(
         _uri('/api/v1/transactions/' + id.toString()),
-        headers: _headers(token),
+        headers: _headers(accessToken),
       ),
     );
     _decode(response);
