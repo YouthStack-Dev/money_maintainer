@@ -202,7 +202,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             ? 0
             : (p.budgetAmount == 0
                 ? 0
-                : (p.spent / p.budgetAmount).clamp(0, 1));
+                : (p.spent / p.budgetAmount).clamp(0, 1).toDouble());
         return Card(
             child: ListTile(
           title: Text(b.name),
