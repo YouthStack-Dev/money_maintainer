@@ -268,7 +268,13 @@ class _MoneyPageState extends State<MoneyPage> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<int>(
-                      initialValue: account,
+                      key: ValueKey(
+                        'money-account-' +
+                            uniqueAccounts.map((item) => item.id).join(','),
+                      ),
+                      initialValue: uniqueAccounts.any((item) => item.id == account)
+                          ? account
+                          : null,
                       decoration: const InputDecoration(labelText: 'Account'),
                       items: uniqueAccounts
                           .map(
@@ -293,7 +299,17 @@ class _MoneyPageState extends State<MoneyPage> {
                     if (type == 'TRANSFER') ...[
                       const SizedBox(height: 10),
                       DropdownButtonFormField<int>(
-                        initialValue: destination,
+                        key: ValueKey(
+                          'money-destination-' +
+                              account.toString() +
+                              '-' +
+                              uniqueAccounts.map((item) => item.id).join(','),
+                        ),
+                        initialValue: destinationItems.any(
+                          (item) => item.id == destination,
+                        )
+                            ? destination
+                            : null,
                         decoration: const InputDecoration(
                           labelText: 'To account',
                         ),
@@ -312,7 +328,17 @@ class _MoneyPageState extends State<MoneyPage> {
                     ] else ...[
                       const SizedBox(height: 10),
                       DropdownButtonFormField<int>(
-                        initialValue: category,
+                        key: ValueKey(
+                          'money-category-' +
+                              type +
+                              '-' +
+                              categoryItems.map((item) => item.id).join(','),
+                        ),
+                        initialValue: categoryItems.any(
+                          (item) => item.id == category,
+                        )
+                            ? category
+                            : null,
                         decoration: const InputDecoration(
                           labelText: 'Category (optional)',
                         ),
