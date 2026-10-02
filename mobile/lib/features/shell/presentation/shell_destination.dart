@@ -21,10 +21,10 @@ enum ShellDestination {
     icon: Icons.handshake_outlined,
     selectedIcon: Icons.handshake,
   ),
-  more(
-    label: 'More',
-    icon: Icons.grid_view_outlined,
-    selectedIcon: Icons.grid_view,
+  profile(
+    label: 'Profile',
+    icon: Icons.person_outline,
+    selectedIcon: Icons.person,
   );
 
   const ShellDestination({
