@@ -17,6 +17,7 @@ class _AuthGateState extends State<AuthGate> {
   bool _loading = true;
   bool _authenticated = false;
   String _email = '';
+  String _accessToken = '';
 
   @override
   void initState() {
@@ -29,7 +30,10 @@ class _AuthGateState extends State<AuthGate> {
     try {
       final session = await _repository.restoreSession();
       if (!mounted) return;
-      if (session != null) _email = await _repository.savedEmail;
+      if (session != null) {
+        _email = await _repository.savedEmail;
+        _accessToken = session.accessToken;
+      }
       setState(() {
         _authenticated = session != null;
         _loading = false;
@@ -46,6 +50,7 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _authenticatedNow() async {
     _email = await _repository.savedEmail;
+    _accessToken = await _repository.accessToken;
     if (mounted) setState(() => _authenticated = true);
   }
 
@@ -55,6 +60,7 @@ class _AuthGateState extends State<AuthGate> {
       setState(() {
         _authenticated = false;
         _email = '';
+        _accessToken = '';
       });
     }
   }
@@ -69,6 +75,7 @@ class _AuthGateState extends State<AuthGate> {
     if (_authenticated) {
       return AppShell(
         repository: _repository,
+        accessToken: _accessToken,
         email: _email,
         onLogout: _logout,
       );

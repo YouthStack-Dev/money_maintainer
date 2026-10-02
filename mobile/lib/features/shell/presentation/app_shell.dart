@@ -8,12 +8,14 @@ import 'shell_destination.dart';
 class AppShell extends StatefulWidget {
   const AppShell({
     required this.repository,
+    required this.accessToken,
     required this.email,
     required this.onLogout,
     super.key,
   });
 
   final AuthRepository repository;
+  final String accessToken;
   final String email;
   final Future<void> Function() onLogout;
 
@@ -27,7 +29,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      DashboardPage(accessToken: widget.repository.accessToken),
+      DashboardPage(accessToken: widget.accessToken),
       const _PlaceholderPage(
         title: 'Money',
         icon: Icons.account_balance_wallet_outlined,
@@ -42,6 +44,7 @@ class _AppShellState extends State<AppShell> {
       ),
       ProfilePage(
         repository: widget.repository,
+        initialEmail: widget.email,
         onLogout: widget.onLogout,
       ),
     ];

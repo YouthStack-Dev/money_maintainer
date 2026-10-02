@@ -7,11 +7,13 @@ import '../../auth/data/auth_repository.dart';
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
     required this.repository,
+    required this.initialEmail,
     required this.onLogout,
     super.key,
   });
 
   final AuthRepository repository;
+  final String initialEmail;
   final Future<void> Function() onLogout;
 
   @override
@@ -51,6 +53,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = _user;
+    final displayEmail = user?.email.isNotEmpty == true
+        ? user!.email
+        : widget.initialEmail;
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _loadProfile,
@@ -87,7 +92,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user?.email ?? 'Signed-in account',
+                            displayEmail.isEmpty
+                                ? 'Signed-in account'
+                                : displayEmail,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (_error != null) ...[
@@ -115,7 +122,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   ListTile(
                     leading: const Icon(Icons.person_outline),
                     title: const Text('Email'),
-                    subtitle: Text(user?.email ?? 'Not loaded'),
+                    subtitle: Text(
+                      displayEmail.isEmpty ? 'Not loaded' : displayEmail,
+                    ),
                   ),
                   const Divider(height: 1),
                   ListTile(
