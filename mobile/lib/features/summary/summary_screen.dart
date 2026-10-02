@@ -51,7 +51,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       title: Text('${a['name'] ?? ''}'),
                       subtitle: Text('${a['account_type'] ?? ''}'),
                       trailing: Text(
-                          '₹${FinancialSummary._n(a['current_balance']).toStringAsFixed(2)}')))
+                          '₹${double.tryParse('${a['current_balance'] ?? 0}')?.toStringAsFixed(2) ?? '0.00'}')))
                 ]));
           }));
   Widget _metric(String title, double value) => Card(
