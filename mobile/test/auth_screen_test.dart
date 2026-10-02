@@ -25,7 +25,7 @@ void main() {
       MaterialApp(
         home: AuthScreen(
           repository: FakeAuthRepository(),
-          onAuthenticated: () {},
+          onAuthenticated: () async {},
         ),
       ),
     );
