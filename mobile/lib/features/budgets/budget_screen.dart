@@ -198,10 +198,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
       future: _service.progress(b.id),
       builder: (c, s) {
         final p = s.data;
-        final ratio = p == null
-            ? 0
+        final double ratio = p == null
+            ? 0.0
             : (p.budgetAmount == 0
-                ? 0
+                ? 0.0
                 : (p.spent / p.budgetAmount).clamp(0, 1).toDouble());
         return Card(
             child: ListTile(
