@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:money_maintainer_mobile/features/shell/presentation/app_shell.dart';
@@ -14,7 +15,7 @@ void main() {
 
   testWidgets('shell navigation opens profile', (tester) async {
     await tester.pumpWidget(
-      AppShell(email: 'test@example.com', onLogout: () async {}),
+      MaterialApp(home: AppShell(email: 'test@example.com', onLogout: () async {})),
     );
 
     await tester.tap(find.text('Profile'));
