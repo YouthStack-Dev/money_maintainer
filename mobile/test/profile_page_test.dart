@@ -33,7 +33,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Test User'), findsOneWidget);
-    expect(find.text('test@example.com'), findsOneWidget);
+    expect(find.text('test@example.com'), findsNWidgets(2));
     expect(find.text('Verified'), findsOneWidget);
   });
 }

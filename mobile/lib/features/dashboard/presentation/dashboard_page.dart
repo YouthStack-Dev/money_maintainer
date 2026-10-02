@@ -23,7 +23,12 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _api = DashboardApi(config: AppEnvironmentConfig.development);
-    _load();
+    if (widget.accessToken.isEmpty) {
+      _loading = false;
+      _error = 'No authenticated session.';
+    } else {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -63,6 +68,12 @@ class _DashboardPageState extends State<DashboardPage> {
             padding: const EdgeInsets.all(24),
             children: [
               const SizedBox(height: 120),
+              Text(
+                'Your money at a glance',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
               const Icon(Icons.cloud_off_outlined, size: 48),
               const SizedBox(height: 16),
               Text(

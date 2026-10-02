@@ -55,6 +55,6 @@ void main() {
     await tester.tap(find.text('Profile'));
     await tester.pump();
 
-    expect(find.text('test@example.com'), findsOneWidget);
+    expect(find.text('test@example.com'), findsNWidgets(2));
   });
 }
