@@ -7,7 +7,7 @@ import '../../auth/data/auth_repository.dart';
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
     required this.repository,
-    required this.initialEmail,
+    this.initialEmail = '',
     required this.onLogout,
     super.key,
   });
