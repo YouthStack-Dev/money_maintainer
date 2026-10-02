@@ -17,6 +17,9 @@ class AuthRepository {
 
   Future<String> get savedEmail async => await _storage.read(_emailKey) ?? '';
 
+  Future<String> get accessToken async =>
+      await _storage.read(_accessTokenKey) ?? '';
+
   Future<AuthSession?> restoreSession() async {
     final token = await _storage.read(_refreshTokenKey);
     if (token == null || token.isEmpty) return null;
@@ -30,7 +33,23 @@ class AuthRepository {
     }
   }
 
-  Future<AuthSession> login({required String email, required String pin}) async {
+  Future<CurrentUser> currentUser() async {
+    final token = await accessToken;
+    if (token.isEmpty) throw StateError('No authenticated session.');
+    return _api.me(token);
+  }
+
+  Future<void> changePin(String pin) async {
+    final token = await accessToken;
+    if (token.isEmpty) throw StateError('No authenticated session.');
+    await _api.changePassword(accessToken: token, pin: pin);
+    await clearSession();
+  }
+
+  Future<AuthSession> login({
+    required String email,
+    required String pin,
+  }) async {
     final session = await _api.login(email: email, pin: pin);
     await _save(session, email: email);
     return session;

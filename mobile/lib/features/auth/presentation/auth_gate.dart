@@ -26,13 +26,22 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _restore() async {
-    final session = await _repository.restoreSession();
-    if (!mounted) return;
-    if (session != null) _email = await _repository.savedEmail;
-    setState(() {
-      _authenticated = session != null;
-      _loading = false;
-    });
+    try {
+      final session = await _repository.restoreSession();
+      if (!mounted) return;
+      if (session != null) _email = await _repository.savedEmail;
+      setState(() {
+        _authenticated = session != null;
+        _loading = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _authenticated = false;
+          _loading = false;
+        });
+      }
+    }
   }
 
   Future<void> _authenticatedNow() async {
@@ -58,7 +67,11 @@ class _AuthGateState extends State<AuthGate> {
       );
     }
     if (_authenticated) {
-      return AppShell(email: _email, onLogout: _logout);
+      return AppShell(
+        repository: _repository,
+        email: _email,
+        onLogout: _logout,
+      );
     }
     return AuthScreen(
       repository: _repository,
@@ -131,13 +144,20 @@ class _AuthScreenState extends State<AuthScreen> {
 
   String _friendlyError(ApiException e) {
     switch (e.statusCode) {
-      case 401: return 'Invalid email or PIN.';
-      case 403: return 'Email verification is required.';
-      case 409: return 'An account with this email already exists.';
-      case 422: return e.message;
-      case 429: return 'Too many failed attempts. Please try again later.';
-      case 503: return 'The service is temporarily unavailable.';
-      default: return e.message;
+      case 401:
+        return 'Invalid email or PIN.';
+      case 403:
+        return 'Email verification is required.';
+      case 409:
+        return 'An account with this email already exists.';
+      case 422:
+        return e.message;
+      case 429:
+        return 'Too many failed attempts. Please try again later.';
+      case 503:
+        return 'The service is temporarily unavailable.';
+      default:
+        return e.message;
     }
   }
 
@@ -155,16 +175,20 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Money Maintainer',
-                        style: Theme.of(context).textTheme.headlineMedium),
+                    Text(
+                      'Money Maintainer',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                     const SizedBox(height: 8),
                     Text(_registering ? 'Create account' : 'Welcome back'),
                     const SizedBox(height: 32),
                     if (_error != null) ...[
-                      Text(_error!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          )),
+                      Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     if (_registering) ...[
@@ -202,9 +226,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setState(() => _obscurePin = !_obscurePin),
-                          icon: Icon(_obscurePin
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
+                          icon: Icon(
+                            _obscurePin
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
                         ),
                       ),
                       validator: (v) =>
@@ -234,9 +260,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                 _registering = !_registering;
                                 _error = null;
                               }),
-                      child: Text(_registering
-                          ? 'Already have an account? Login'
-                          : 'New here? Create account'),
+                      child: Text(
+                        _registering
+                            ? 'Already have an account? Login'
+                            : 'New here? Create account',
+                      ),
                     ),
                   ],
                 ),

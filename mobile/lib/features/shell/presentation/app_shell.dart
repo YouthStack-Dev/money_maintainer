@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../auth/data/auth_repository.dart';
 import '../../dashboard/presentation/dashboard_page.dart';
 import '../../profile/presentation/profile_page.dart';
 import 'shell_destination.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({
+    required this.repository,
     required this.email,
     required this.onLogout,
     super.key,
   });
 
+  final AuthRepository repository;
   final String email;
   final Future<void> Function() onLogout;
 
@@ -24,7 +27,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      const DashboardPage(),
+      DashboardPage(accessToken: widget.repository.accessToken),
       const _PlaceholderPage(
         title: 'Money',
         icon: Icons.account_balance_wallet_outlined,
@@ -37,7 +40,10 @@ class _AppShellState extends State<AppShell> {
         title: 'Lending',
         icon: Icons.handshake_outlined,
       ),
-      ProfilePage(email: widget.email, onLogout: widget.onLogout),
+      ProfilePage(
+        repository: widget.repository,
+        onLogout: widget.onLogout,
+      ),
     ];
 
     return Scaffold(
