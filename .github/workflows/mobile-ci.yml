@@ -1,0 +1,30 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [phase-mobile-1]
+  workflow_dispatch:
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Build debug APK
+        run: flutter build apk --debug --dart-define=MM_API_URL=https://money-api.mltcorporate.com
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoneyMaintainer-mobile-debug
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
