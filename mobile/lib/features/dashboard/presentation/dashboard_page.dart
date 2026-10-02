@@ -133,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         : (data.budgetSpent / data.budgetTotal).clamp(0, 1),
                   ),
                   const SizedBox(height: 8),
-                  Text(_money(data.budgetRemaining) + ' remaining'),
+                  Text('${_money(data.budgetRemaining)} remaining'),
                 ],
               ),
             ),
@@ -218,14 +218,10 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  String _money(double value) => '₹ ' + value.toStringAsFixed(2);
+  String _money(double value) => '₹ ${value.toStringAsFixed(2)}';
 
   String _date(DateTime value) =>
-      value.day.toString().padLeft(2, '0') +
-      '/' +
-      value.month.toString().padLeft(2, '0') +
-      '/' +
-      value.year.toString();
+      '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
 
   IconData _transactionIcon(String type) {
     switch (type) {
@@ -260,16 +256,12 @@ class _BalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '₹ ' + data.availableMoney.toStringAsFixed(2),
+              '₹ ${data.availableMoney.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.displaySmall,
             ),
             const SizedBox(height: 12),
             Text(
-              'Net cash flow ' +
-                  flow +
-                  '₹ ' +
-                  data.netCashFlow.toStringAsFixed(2) +
-                  ' this month',
+              'Net cash flow ${flow}₹ ${data.netCashFlow.toStringAsFixed(2)} this month',
             ),
           ],
         ),
