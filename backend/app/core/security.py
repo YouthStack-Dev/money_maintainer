@@ -6,12 +6,8 @@ from app.core.config import settings
 password_hash = PasswordHash.recommended()
 
 def validate_password(password: str) -> None:
-    if len(password) < 12 or len(password) > 128:
-        raise ValueError("Password must be 12-128 characters")
-    if not any(c.isupper() for c in password) or not any(c.islower() for c in password):
-        raise ValueError("Password must contain upper and lower case letters")
-    if not any(c.isdigit() for c in password) or not any(not c.isalnum() for c in password):
-        raise ValueError("Password must contain a number and special character")
+    if len(password) != 4 or not password.isdigit():
+        raise ValueError("PIN must be exactly 4 digits")
 
 def hash_password(password: str) -> str:
     validate_password(password)
