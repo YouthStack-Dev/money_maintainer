@@ -11,7 +11,10 @@ class AppEnvironmentConfig {
 
   static const development = AppEnvironmentConfig(
     environment: AppEnvironment.development,
-    apiBaseUrl: 'http://10.0.2.2:8000',
+    apiBaseUrl: String.fromEnvironment(
+      'MM_API_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ),
   );
 
   static const staging = AppEnvironmentConfig(
