@@ -37,7 +37,7 @@ class AccountItem {
 
 class AccountsApi {
   AccountsApi({required this.config, http.Client? client})
-    : _client = client ?? http.Client();
+      : _client = client ?? http.Client();
 
   final AppEnvironmentConfig config;
   final http.Client _client;
@@ -91,8 +91,10 @@ class AccountsApi {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final detail = data is Map<String, dynamic> ? data['detail'] : null;
       var message = response.statusCode == 401
-        ? 'Your session expired. Please sign in again.'
-        : 'Account request failed (' + response.statusCode.toString() + ').';
+          ? 'Your session expired. Please sign in again.'
+          : 'Account request failed (' +
+                response.statusCode.toString() +
+                ').';
       if (detail is String && detail.trim().isNotEmpty) {
         message = detail;
       } else if (detail is List && detail.isNotEmpty) {
@@ -110,10 +112,10 @@ class AccountsApi {
   Future<List<AccountItem>> list(String token) async {
     final response = await _request(
       token,
-      (accessToken) => _client.get(_uri('/api/v1/accounts'), headers: _headers(accessToken)),
+      (accessToken) =>
+          _client.get(_uri('/api/v1/accounts'), headers: _headers(accessToken)),
     );
     final data = _decode(response) as List;
-
     final seen = <int>{};
     return data
         .map(
@@ -132,7 +134,8 @@ class AccountsApi {
     double balance,
   ) async {
     final response = await _request(
-      () => _client.post(
+      token,
+      (accessToken) => _client.post(
         _uri('/api/v1/accounts'),
         headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -157,9 +160,10 @@ class AccountsApi {
     double balance,
   ) async {
     final response = await _request(
-      () => _client.patch(
+      token,
+      (accessToken) => _client.patch(
         _uri('/api/v1/accounts/' + id.toString()),
-        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': name,
           'institution_name': institution.isEmpty ? null : institution,
@@ -174,9 +178,10 @@ class AccountsApi {
 
   Future<void> remove(String token, int id) async {
     final response = await _request(
-      () => _client.delete(
+      token,
+      (accessToken) => _client.delete(
         _uri('/api/v1/accounts/' + id.toString()),
-        headers: _headers(token),
+        headers: _headers(accessToken),
       ),
     );
     _decode(response);
