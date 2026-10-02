@@ -122,9 +122,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _money(data.budgetSpent) +
-                        ' of ' +
-                        _money(data.budgetTotal),
+                    '${_money(data.budgetSpent)} of ${_money(data.budgetTotal)}',
                   ),
                   const SizedBox(height: 10),
                   LinearProgressIndicator(
@@ -192,8 +190,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     : _date(item.date!),
                               ),
                               trailing: Text(
-                                (item.type == 'EXPENSE' ? '-' : '+') +
-                                    _money(item.amount),
+                                '${item.type == 'EXPENSE' ? '-' : '+'}${_money(item.amount)}',
                               ),
                             ),
                           )
@@ -206,10 +203,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Text(
                 data.unreadAlerts == 0
                     ? 'No unread alerts.'
-                    : data.unreadAlerts.toString() +
-                        ' unread alert' +
-                        (data.unreadAlerts == 1 ? '' : 's') +
-                        '.',
+                    : '${data.unreadAlerts} unread alert${data.unreadAlerts == 1 ? '' : 's'}.',
               ),
             ),
           ],
@@ -261,7 +255,7 @@ class _BalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Net cash flow ${flow}₹ ${data.netCashFlow.toStringAsFixed(2)} this month',
+              'Net cash flow $flow₹ ${data.netCashFlow.toStringAsFixed(2)} this month',
             ),
           ],
         ),
