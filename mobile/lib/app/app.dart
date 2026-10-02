@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/auth_gate.dart';
-import '../features/shell/presentation/app_shell.dart';
 import 'app_theme.dart';
 
 class MoneyMaintainerApp extends StatelessWidget {
@@ -15,7 +14,6 @@ class MoneyMaintainerApp extends StatelessWidget {
       theme: AppTheme.light(),
       routes: {
         AppRoutes.auth: (_) => const AuthGate(),
-        AppRoutes.shell: (_) => const AppShell(),
       },
       initialRoute: AppRoutes.auth,
     );
@@ -24,5 +22,4 @@ class MoneyMaintainerApp extends StatelessWidget {
 
 abstract final class AppRoutes {
   static const auth = '/auth';
-  static const shell = '/app';
 }
