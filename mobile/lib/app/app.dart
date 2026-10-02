@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/auth/presentation/auth_gate.dart';
+import '../features/shell/presentation/app_shell.dart';
 import 'app_theme.dart';
 
 class MoneyMaintainerApp extends StatelessWidget {
@@ -11,20 +13,16 @@ class MoneyMaintainerApp extends StatelessWidget {
       title: 'Money Maintainer',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const _FoundationScreen(),
+      routes: {
+        AppRoutes.auth: (_) => const AuthGate(),
+        AppRoutes.shell: (_) => const AppShell(),
+      },
+      initialRoute: AppRoutes.auth,
     );
   }
 }
 
-class _FoundationScreen extends StatelessWidget {
-  const _FoundationScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Money Maintainer'),
-      ),
-    );
-  }
+abstract final class AppRoutes {
+  static const auth = '/auth';
+  static const shell = '/app';
 }
