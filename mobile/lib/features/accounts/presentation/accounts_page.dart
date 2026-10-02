@@ -18,6 +18,7 @@ class _AccountsPageState extends State<AccountsPage> {
   late final AccountsApi api;
   List<AccountItem> items = [];
   bool loading = true;
+  bool _operationInProgress = false;
   String? error;
 
   @override
@@ -54,10 +55,12 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Future<void> add() async {
-    final result = await form();
-    if (result == null) return;
-
+    if (_operationInProgress) return;
+    setState(() => _operationInProgress = true);
     try {
+      final result = await form();
+      if (result == null) return;
+
       final created = await api.create(
         widget.accessToken,
         result.name,
@@ -75,14 +78,18 @@ class _AccountsPageState extends State<AccountsPage> {
       await load();
     } catch (e) {
       msg(e);
+    } finally {
+      if (mounted) setState(() => _operationInProgress = false);
     }
   }
 
   Future<void> edit(AccountItem account) async {
-    final result = await form(account);
-    if (result == null) return;
-
+    if (_operationInProgress) return;
+    setState(() => _operationInProgress = true);
     try {
+      final result = await form(account);
+      if (result == null) return;
+
       final updated = await api.update(
         widget.accessToken,
         account.id,
@@ -101,10 +108,14 @@ class _AccountsPageState extends State<AccountsPage> {
       await load();
     } catch (e) {
       msg(e);
+    } finally {
+      if (mounted) setState(() => _operationInProgress = false);
     }
   }
 
   Future<void> remove(AccountItem account) async {
+    if (_operationInProgress) return;
+    setState(() => _operationInProgress = true);
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -122,7 +133,10 @@ class _AccountsPageState extends State<AccountsPage> {
         ],
       ),
     );
-    if (ok != true) return;
+    if (ok != true) {
+      if (mounted) setState(() => _operationInProgress = false);
+      return;
+    }
 
     try {
       await api.remove(widget.accessToken, account.id);
@@ -134,6 +148,8 @@ class _AccountsPageState extends State<AccountsPage> {
       await load();
     } catch (e) {
       msg(e);
+    } finally {
+      if (mounted) setState(() => _operationInProgress = false);
     }
   }
 
@@ -352,7 +368,7 @@ class _AccountsPageState extends State<AccountsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: loading ? null : add,
+        onPressed: loading || _operationInProgress ? null : add,
         icon: const Icon(Icons.add),
         label: const Text('Add account'),
       ),
@@ -396,7 +412,7 @@ class _AccountsPageState extends State<AccountsPage> {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: add,
+            onPressed: _operationInProgress ? null : add,
             icon: const Icon(Icons.add),
             label: const Text('Add first account'),
           ),
