@@ -4,7 +4,7 @@ import 'package:money_maintainer_mobile/features/dashboard/data/dashboard_api.da
 
 void main() {
   test('dashboard data holds API summary values', () {
-    final data = DashboardData(
+    const data = DashboardData(
       availableMoney: 1000,
       spending: 200,
       income: 500,
