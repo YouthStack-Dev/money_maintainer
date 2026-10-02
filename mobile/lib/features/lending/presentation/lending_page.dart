@@ -124,7 +124,13 @@ class _LendingPageState extends State<LendingPage> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
-                  initialValue: accountId,
+                  key: ValueKey(
+                    'lending-account-' +
+                        accounts.map((account) => account.id).join(','),
+                  ),
+                  initialValue: accounts.any((account) => account.id == accountId)
+                      ? accountId
+                      : null,
                   decoration: const InputDecoration(labelText: 'Account'),
                   items: accounts
                       .map(
@@ -294,7 +300,13 @@ class _LendingPageState extends State<LendingPage> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                initialValue: accountId,
+                key: ValueKey(
+                  'lending-repay-account-' +
+                      accounts.map((account) => account.id).join(','),
+                ),
+                initialValue: accounts.any((account) => account.id == accountId)
+                    ? accountId
+                    : null,
                 decoration: const InputDecoration(labelText: 'Account'),
                 items: accounts
                     .map(
