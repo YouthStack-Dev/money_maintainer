@@ -5,7 +5,7 @@ import 'package:money_maintainer_mobile/features/shell/presentation/app_shell.da
 void main() {
   testWidgets('shell starts on dashboard', (tester) async {
     await tester.pumpWidget(
-      AppShell(email: 'test@example.com', onLogout: () async {}),
+      MaterialApp(home: AppShell(email: 'test@example.com', onLogout: () async {})),
     );
 
     expect(find.text('Money Maintainer'), findsOneWidget);
