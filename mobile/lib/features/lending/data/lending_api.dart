@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/auth/auth_token_refresher.dart';
 import '../../../core/config/app_environment.dart';
 import '../../../core/errors/app_exception.dart';
 
@@ -93,9 +94,19 @@ class LendingApi {
     return base.replace(path: base.path + path);
   }
 
-  Future<http.Response> _request(Future<http.Response> Function() call) async {
+  Future<http.Response> _request(
+    String token,
+    Future<http.Response> Function(String token) call,
+  ) async {
     try {
-      return await call().timeout(_timeout);
+      var response = await call(token).timeout(_timeout);
+      if (response.statusCode == 401) {
+        final refreshed = await AuthTokenRefresher.refresh(config);
+        if (refreshed != null) {
+          response = await call(refreshed).timeout(_timeout);
+        }
+      }
+      return response;
     } on TimeoutException {
       throw const NetworkException(
         'The server took too long to respond. Please try again.',
@@ -120,7 +131,9 @@ class LendingApi {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final detail = data is Map<String, dynamic> ? data['detail'] : null;
-      var message = fallback;
+      var message = response.statusCode == 401
+          ? 'Your session expired. Please sign in again.'
+          : fallback;
       if (detail is String && detail.trim().isNotEmpty) {
         message = detail;
       } else if (detail is List && detail.isNotEmpty) {
@@ -137,7 +150,8 @@ class LendingApi {
 
   Future<List<LendingItem>> list(String token) async {
     final response = await _request(
-      () => _client.get(_uri('/api/v1/debts'), headers: _headers(token)),
+      token,
+      (accessToken) => _client.get(_uri('/api/v1/debts'), headers: _headers(accessToken)),
     );
     final data = _decode(response, 'Unable to load lending records.') as List;
     return data
@@ -187,7 +201,7 @@ class LendingApi {
     final response = await _request(
       () => _client.post(
         _uri('/api/v1/debts'),
-        headers: {..._headers(token), 'Content-Type': 'application/json'},
+        headers: {..._headers(accessToken), 'Content-Type': 'application/json'},
         body: jsonEncode({
           'direction': direction,
           'account_id': accountId,
